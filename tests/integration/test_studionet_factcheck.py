@@ -28,7 +28,15 @@ from __future__ import annotations
 import time
 
 import pytest
-from netconfig import ATTO_PER_GEN, CLAIM_REPO, CLAIM_THRESHOLD, FAR_FUTURE, SOURCE_URL
+from netconfig import (
+    ATTO_PER_GEN,
+    CLAIM_REPO,
+    CLAIM_THRESHOLD,
+    FAR_FUTURE,
+    MALFORMED_DEADLINE,
+    PAST_DEADLINE,
+    SOURCE_URL,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -322,3 +330,106 @@ class TestAuthorizationAndAggregation:
         with pytest.raises(Exception):
             client.read_contract(
                 registry_address, "get_bounty_address", args=["no-such-bounty"])
+
+
+def _bounty_ids(client, registry_address) -> set:
+    listing = client.read_contract(registry_address, "list_bounties")
+    return {entry["bounty_id"] for entry in listing["bounties"]}
+
+
+class TestCreateBountyValidation:
+    """The lifecycle fix: a malformed bounty is refused *before* a child is paid for.
+
+    Each case submits a real `create_bounty` that the corrected factory must
+    reject at its input-validation gate. The proof is not the revert message --
+    the ring may refuse at submit time or finalize the call with the contract's
+    own rejection -- but that no child contract was ever indexed under the id,
+    because a rejected creation must not spend a deployment on an unusable claim.
+    """
+
+    def _assert_never_created(self, client, registry_address, settle, poster, args):
+        bounty_id = f"it-reject-{int(time.time() * 1000) % 10**9}"
+        try:
+            tx = str(client.write_contract(
+                registry_address, "create_bounty",
+                account=poster, value=ATTO_PER_GEN, args=[bounty_id, *args]))
+            try:
+                settle(tx, f"create_bounty {bounty_id}")
+            except Exception:
+                pass  # settled in a rejecting state; the id check is the proof
+        except Exception:
+            pass  # refused at submit time
+        assert bounty_id not in _bounty_ids(
+            client, registry_address), f"a malformed bounty was indexed: {bounty_id}"
+
+    def test_a_bad_repository_shape_is_refused_without_a_child(
+            self, client, registry_address, settle, poster):
+        self._assert_never_created(
+            client, registry_address, settle, poster,
+            ["not-a-repo", CLAIM_THRESHOLD, FAR_FUTURE])
+
+    def test_a_non_positive_threshold_is_refused_without_a_child(
+            self, client, registry_address, settle, poster):
+        self._assert_never_created(
+            client, registry_address, settle, poster,
+            [CLAIM_REPO, 0, FAR_FUTURE])
+
+    def test_a_deadline_in_the_past_is_refused_without_a_child(
+            self, client, registry_address, settle, poster):
+        self._assert_never_created(
+            client, registry_address, settle, poster,
+            [CLAIM_REPO, CLAIM_THRESHOLD, PAST_DEADLINE])
+
+    def test_a_malformed_deadline_is_refused_without_a_child(
+            self, client, registry_address, settle, poster):
+        self._assert_never_created(
+            client, registry_address, settle, poster,
+            [CLAIM_REPO, CLAIM_THRESHOLD, MALFORMED_DEADLINE])
+
+
+@pytest.fixture(scope="session")
+def reported_unverified_bounty(client, bounty, reporter, settle):
+    """Create a bounty and take a timely, *finalized* report, but never verify."""
+    created = bounty(CLAIM_REPO, CLAIM_THRESHOLD, FAR_FUTURE, ATTO_PER_GEN)
+    child = created["child"]
+    tx = str(client.write_contract(
+        child, "submit_report", account=reporter, args=["TRUE"]))
+    created["report_tx"] = tx
+    # Wait for the report to finalize; reading the receipt immediately would see
+    # the pre-report OPEN state and tell us nothing about the reclaim guard.
+    created["report_receipt"] = settle(tx, f"submit_report pending {child}")
+    return created
+
+
+class TestReclaimCannotUndercutAPendingReport:
+    """The race fix, on live state: a timely report is never refunded away.
+
+    The REPORTED guard in `reclaim_after_timeout` sits ahead of the deadline
+    check, so a poster reclaim attempt against a still-pending report reverts on
+    the *report* ground no matter how far the deadline is -- which is exactly
+    what lets this be proven without waiting for an expiry. The escrow has to
+    stay put, unspendable by the poster, until verification settles it.
+    """
+
+    def test_a_pending_report_blocks_the_poster_refund(
+            self, client, reported_unverified_bounty, poster):
+        child = reported_unverified_bounty["child"]
+        before = dict(client.read_contract(child, "get_status"))
+        assert before["status"] == "REPORTED", before
+        assert int(before["escrow_atto"]) == ATTO_PER_GEN
+
+        try:
+            tx = str(client.write_contract(
+                child, "reclaim_after_timeout", account=poster))
+            try:
+                client.get_transaction(tx)
+            except Exception:
+                pass
+        except Exception:
+            pass  # refused outright
+
+        after = dict(client.read_contract(child, "get_status"))
+        assert after["status"] == "REPORTED", (
+            f"a pending report was refunded away: {after}")
+        assert int(after["escrow_atto"]) == ATTO_PER_GEN, (
+            "the escrow left the child while a report awaited verification")

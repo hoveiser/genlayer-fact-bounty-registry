@@ -1,10 +1,11 @@
 # The factory embeds `contracts/BountyClaim.py` byte-for-byte into
 # `contracts/BountyRegistry.py`, and what studionet stores for the registry and
-# for every deployed child is exactly those bytes (CRLF included -- the bundle
-# was built on Windows). Normalising line endings on commit/checkout would change
-# the embedded payload, break `scripts/build_bundle.py --check`, and break the
-# byte-exact "the chain stores this file" check in
-# `scripts/verify_explorer_evidence.py`. So these files are stored verbatim.
+# for every deployed child is exactly those bytes (the corrected contracts were
+# bundled and redeployed from Linux, so they carry LF). Normalising line endings
+# on commit/checkout would change the embedded payload, break
+# `scripts/build_bundle.py --check`, and break the byte-exact "the chain stores
+# this file" check in `scripts/verify_explorer_evidence.py`. So these files are
+# stored verbatim.
 *.py -text
 *.pyc binary
 

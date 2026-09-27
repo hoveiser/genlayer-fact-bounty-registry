@@ -9,8 +9,8 @@ Contracts only — no frontend, no backend.
 - Network: **GenLayer studionet**, chainId `61999`
 - Runner: pinned by content hash on line 1 of both contract files
   (`py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`)
-- Live deployment:
-  [`0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012`](https://explorer-studio.genlayer.com/address/0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012)
+- Live deployment (corrected resubmit):
+  [`0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0`](https://explorer-studio.genlayer.com/address/0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0)
   — every transaction in this README is linked and independently verified in
   [EVIDENCE: live studionet run](#evidence-live-studionet-run) and
   [EVIDENCE: the integration suite's own transactions](#evidence-the-integration-suites-own-transactions).
@@ -43,8 +43,8 @@ contracts/
   BountyRegistry.py    factory + index contract (embeds the child source, see below)
   BountyClaim.py       one verification/escrow state machine per bounty
 tests/
-  direct/              51 Direct Mode tests (real pinned runner, in-process, no consensus)
-  integration/         13 live studionet tests (real leader + 5 validators)
+  direct/              76 Direct Mode tests (real pinned runner, in-process, no consensus)
+  integration/         18 live studionet tests (real leader + 5 validators)
                        shared helpers live in direct_harness.py / netconfig.py,
                        not in conftest.py — see note 21 below
 scripts/
@@ -117,12 +117,13 @@ embedded copy is byte-identical to the canonical file, so the two cannot drift.
 every run).
 
 Because the payload is the child file's **bytes**, line endings are part of the
-deployed artifact: the bundle was built on Windows, so the on-chain child carries
-CRLF. `.gitattributes` therefore opts `*.py` out of line-ending normalisation, so
-that a checkout of this repository still reproduces the deployed bytes. The
-upshot is a property rather than a disclaimer: `verify_explorer_evidence.py`
-compares the source the explorer stores against the files in this tree, and they
-match byte-for-byte — see
+deployed artifact. The corrected contracts were bundled and redeployed from
+Linux, so both `BountyRegistry.py` and the embedded child now carry LF. The
+deployed source is uploaded verbatim, and `.gitattributes` opts `*.py` out of
+line-ending normalisation so a checkout of this repository still reproduces those
+exact bytes. The upshot is a property rather than a disclaimer:
+`verify_explorer_evidence.py` compares the source the explorer stores against the
+files in this tree, and they match byte-for-byte — see
 [The repository is the deployment](#the-repository-is-the-deployment).
 
 ## Equivalence principle: consensus on derived verdicts, never on raw pages
@@ -183,17 +184,42 @@ Consequences of that shape:
 
 ## State machine
 
+A bounty is only opened once `create_bounty` has validated its inputs — a
+well-formed `owner/name` repository, a strictly positive `threshold`, and a
+`deadline_at` that normalises to a well-formed UTC stamp **strictly after the
+chain's current time**. Any failure raises `[EXPECTED]` and reverts *before* the
+finalized child deployment is scheduled, so a malformed claim can never spend a
+deploy.
+
 ```
-OPEN ──submit_report──▶ REPORTED ──verify──▶ PAID        (report == derived truth, escrow -> reporter)
-   │                       │                   └─▶ REJECTED   (report != truth, escrow stays)
-   │                       └─────────────────────▶ UNRESOLVED (source unreachable for the ring)
-   └──────────── reclaim_after_timeout ───────────▶ REFUNDED  (poster gets the escrow back)
+                       (on-time report only: now <= deadline_at)
+OPEN ─────────────────────────────────────────────▶ REPORTED ──verify──▶ PAID     (report == derived truth, escrow -> reporter)
+   │  ▲                                                │                   └─▶ REJECTED   (report != truth, escrow stays)
+   │  │ (late report refused: now > deadline_at)        └─────────────────────▶ UNRESOLVED (source unreachable for the ring)
+   │  └─────────────────────────────────...
+   │
+   └──────────── reclaim_after_timeout (from OPEN / REJECTED / UNRESOLVED only, after the deadline) ───────────▶ REFUNDED
 ```
+
+Two time gates and one state gate now define the lifecycle:
+
+- **Reports are deadline-gated.** `submit_report` reads the chain timestamp and
+  refuses (`now > deadline_at`) any report filed after expiry, so a late claim
+  never becomes state and verification is never scheduled for it. A report in
+  the final second (`now == deadline_at`) is still accepted.
+- **Reclaim is state-gated against `REPORTED`.** `reclaim_after_timeout()`
+  succeeds only from `OPEN` (never reported), or from the terminal `REJECTED` /
+  `UNRESOLVED` states a verification has already reached — **never** from
+  `REPORTED`. A timely report awaiting consensus cannot be undercut by a refund;
+  the poster who wants their GEN back triggers `verify()` themselves to settle
+  the pending report first, and only then may reclaim.
 
 `REJECTED`, `UNRESOLVED` and never-reported `OPEN` bounties are all reclaimable
 by the poster once `deadline_at` has passed. **A bounty nobody ever reported is
 reclaimed with no AI verification at all** — `reclaim_after_timeout()` never
-touches `_fact_check`, which is the whole point of requirement 7.
+touches `_fact_check`, which is the whole point of requirement 7. Verification
+itself is deliberately *not* deadline-gated, so the poster's way to unlock a
+blocked reclaim (settle the pending report) always works.
 
 ## Storage schema
 
@@ -244,7 +270,7 @@ every subsequent storage slot and silently corrupts deployed state.
 
 | method                                                                        | kind                  | notes                                                                                      |
 | ----------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------ |
-| `create_bounty(bounty_id, repo_full_name, threshold, deadline_at) -> Address` | `write` **`payable`** | locks `gl.message.value` as the reward, deploys and indexes the child, returns its address |
+| `create_bounty(bounty_id, repo_full_name, threshold, deadline_at) -> Address` | `write` **`payable`** | **validates** repo shape / positive threshold / strictly-future well-formed deadline, then locks `gl.message.value`, deploys and indexes the child, returns its address |
 | `set_owner(new_owner)`                                                        | `write`               | owner-gated                                                                                |
 | `list_bounties()`                                                             | `view`                | `{count, total_created, bounties[]}`                                                       |
 | `get_bounty_address(bounty_id)`                                               | `view`                | rejects an unknown id instead of returning zero                                            |
@@ -255,9 +281,9 @@ every subsequent storage slot and silently corrupts deployed state.
 
 | method                           | kind    | notes                                                                         |
 | -------------------------------- | ------- | ----------------------------------------------------------------------------- |
-| `submit_report(verdict) -> str`  | `write` | `TRUE`/`FALSE`, first report wins, **poster may not report their own bounty** |
-| `verify() -> str`                | `write` | poster or reporter only; runs the consensus fact-check and settles            |
-| `reclaim_after_timeout() -> str` | `write` | poster only, deadline-gated, single-use, never after `PAID`                   |
+| `submit_report(verdict) -> str`  | `write` | `TRUE`/`FALSE`, first **on-time** report wins (refused once `deadline_at` has passed), **poster may not report their own bounty** |
+| `verify() -> str`                | `write` | poster or reporter only; runs the consensus fact-check and settles; **not** deadline-gated so a pending report can always be settled |
+| `reclaim_after_timeout() -> str` | `write` | poster only, deadline-gated, single-use; allowed from `OPEN`/`REJECTED`/`UNRESOLVED` **but never `REPORTED`** (a pending report blocks the refund until verified) |
 | `get_status()`                   | `view`  | full detail including live `escrow_atto`                                      |
 | `get_evidence()`                 | `view`  | verification artefacts only, no money fields                                  |
 
@@ -268,8 +294,11 @@ Every sender check reads `gl.message.sender_address` and raises
 
 ```powershell
 npm install -g genlayer                       # CLI 0.39.2 used here
-py -3.12 -m pip install genlayer-py genvm-linter gltest
+py -3.12 -m pip install genlayer-py==0.16.3 genlayer-test==0.29.2 genvm-linter==0.11.0
 ```
+
+The Direct Mode harness is the PyPI package **`genlayer-test`** (it imports as
+`gltest`); there is no `gltest` distribution to install.
 
 `.env` (git-ignored, and checked that way before every commit):
 
@@ -293,7 +322,7 @@ genvm-lint check contracts/BountyRegistry.py
 ### Direct Mode — fast, in-process, no consensus
 
 ```powershell
-py -3.12 -m pytest tests/direct -q            # 51 passed
+py -3.12 -m pytest tests/direct -q            # 76 passed
 ```
 
 Direct Mode runs the **real pinned runner** against the real contract source —
@@ -339,16 +368,25 @@ genlayer deploy --contract contracts/BountyRegistry.py
 The CLI prints the deployment transaction hash and the contract address.
 `BountyRegistry.__init__` takes no constructor arguments, so `--args` is unused.
 
+The CLI decrypts the active account's keystore with an interactive passphrase.
+For this corrected resubmit the redeploy was driven through the SDK primitive the
+CLI itself wraps -- `genlayer_py.deploy_contract(code=<BountyRegistry.py text>)`
+-- via `scripts/deploy_registry.py`, reading the raw key from the git-ignored
+`.env`. The uploaded source is verbatim, so the on-chain artifact is
+byte-for-byte this file; the explorer verification below confirms it.
+
 Note that the CLI exposes **no way to attach value to a method call**, so
 value-bearing writes (`create_bounty`) go through the Python SDK
 (`client.write_contract(..., value=...)`) as `scripts/e2e_studionet.py` does.
 
-Then exercise and verify a real lifecycle:
+Then exercise and verify a real lifecycle against the new registry:
 
 ```powershell
-py -3.12 scripts/e2e_studionet.py --registry 0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012
-py -3.12 scripts/verify_explorer_evidence.py --registry 0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012
+py -3.12 scripts/e2e_studionet.py --registry 0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0
 py -3.12 scripts/audit_payout_ledger.py
+py -3.12 scripts/verify_explorer_evidence.py --registry 0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0
+py -3.12 scripts/collect_integration_evidence.py --registry 0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0 --out evidence/integration-evidence.json
+py -3.12 scripts/verify_explorer_evidence.py --evidence evidence/integration-evidence.json --registry 0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0 --audit none --out evidence/explorer-verification-integration.json
 ```
 
 ## EVIDENCE: live studionet run
@@ -369,16 +407,18 @@ the contract in the tree, so the verifier also compares the source the explorer
 stores against the local files — byte-for-byte:
 
 ```
-  registry   CONTRACT tx_count=18 pin=1jb45aa8ynh2a9c9.. 0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012
+  registry   CONTRACT tx_count=20 pin=1jb45aa8ynh2a9c9.. 0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0
              deployed source vs BountyRegistry.py: bytes=True, modulo line endings=True
-  child_A    CONTRACT tx_count=4  pin=1jb45aa8ynh2a9c9.. 0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717
+  child_A    CONTRACT tx_count=4  pin=1jb45aa8ynh2a9c9.. 0x27d88ae26A0D2A36bf19613e5C3F6b09478FF08e
              deployed source vs BountyClaim.py: bytes=True, modulo line endings=True
-  child_B    CONTRACT tx_count=3  pin=1jb45aa8ynh2a9c9.. 0x8f366497E7D5C14a144d0AE782850D568fF7DF15
+  child_B    CONTRACT tx_count=4  pin=1jb45aa8ynh2a9c9.. 0xEf76F49C20926a79cceB725c33AD5184057cC336
              deployed source vs BountyClaim.py: bytes=True, modulo line endings=True
 ```
 
-The same holds for all four integration-run children (`bytes=True` each). A
-mismatch is a reported problem, not a silent pass.
+The same holds for all five integration-run children (`bytes=True` each). A
+mismatch is a reported problem, not a silent pass. Because both contracts were
+redeployed from Linux this time, the on-chain bytes carry LF and still match the
+tree exactly -- the line-ending story is now identical for parent and children.
 
 This check earned its keep: it was added after an editor auto-reformat had
 quietly changed `contracts/BountyClaim.py` relative to what was deployed, which
@@ -390,54 +430,65 @@ Actors
 
 | role                                              | address                                                                                                                                 |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `BountyRegistry` (deployed)                       | [`0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012`](https://explorer-studio.genlayer.com/address/0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012) |
-| poster (pays, verifies, reclaims)                 | `0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a`                                                                                            |
-| reporter (independent EOA)                        | [`0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc`](https://explorer-studio.genlayer.com/address/0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc) |
-| child `BountyClaim` A — `skills-ge-10-1790465224` | [`0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717`](https://explorer-studio.genlayer.com/address/0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717) |
-| child `BountyClaim` B — `timeout-1790465224`      | [`0x8f366497E7D5C14a144d0AE782850D568fF7DF15`](https://explorer-studio.genlayer.com/address/0x8f366497E7D5C14a144d0AE782850D568fF7DF15) |
+| `BountyRegistry` (deployed)                       | [`0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0`](https://explorer-studio.genlayer.com/address/0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0) |
+| poster (pays, verifies, reclaims; SDK deployer)   | `0x3de43AA2f7162c80af98abe78222aE0Cdf83c506`                                                                                            |
+| reporter (independent EOA)                        | [`0xc8F1305Fa9E86ff8Fab8affA2133356290Ae69a6`](https://explorer-studio.genlayer.com/address/0xc8F1305Fa9E86ff8Fab8affA2133356290Ae69a6) |
+| child `BountyClaim` A — `skills-ge-10-1790529196` | [`0x27d88ae26A0D2A36bf19613e5C3F6b09478FF08e`](https://explorer-studio.genlayer.com/address/0x27d88ae26A0D2A36bf19613e5C3F6b09478FF08e) |
+| child `BountyClaim` B — `timeout-1790529196`      | [`0xEf76F49C20926a79cceB725c33AD5184057cC336`](https://explorer-studio.genlayer.com/address/0xEf76F49C20926a79cceB725c33AD5184057cC336) |
 
 Registry deploy tx:
-[`0x86c85f347cc12dd335c977becbac23b317093d58b176dfb9837b808fe69f9fd6`](https://explorer-studio.genlayer.com/tx/0x86c85f347cc12dd335c977becbac23b317093d58b176dfb9837b808fe69f9fd6)
+[`0x6307f71d0f4072dfa4e783d46c8daea18750e68dd5dee950fd20fab489940e33`](https://explorer-studio.genlayer.com/tx/0x6307f71d0f4072dfa4e783d46c8daea18750e68dd5dee950fd20fab489940e33)
 
-Flow 1 — a correct report reaches consensus and gets paid
+Flow 1 — a valid bounty passes the new input gate, is reported, and gets paid
 
 | step                                     | explorer status | value                 | tx                                                                                                                                  |
 | ---------------------------------------- | --------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `create_bounty` locking 1 GEN            | `FINALIZED`     | `1000000000000000000` | [`0xf0e78acc…b76705ff`](https://explorer-studio.genlayer.com/tx/0xf0e78acc4b80ec496e225826e6686a7d7748be81320fa7b63612bf40b76705ff) |
-| ↳ child deployed by the factory          | `FINALIZED`     | `1000000000000000000` | [`0x6a894140…5c8fbb8b`](https://explorer-studio.genlayer.com/tx/0x6a8941402e66509cf84bcc1470a4fe28869e195659f885899b317e425c8fbb8b) |
-| `submit_report("TRUE")` by the reporter  | `FINALIZED`     | 0                     | [`0x00731b0d…aa0c4cbf`](https://explorer-studio.genlayer.com/tx/0x00731b0dcb209465dc1c77fd5e0ad2f04e85fb498685a60efe793c08aa0c4cbf) |
-| `verify()` — leader + 5 validators fetch | `FINALIZED`     | 0                     | [`0xc6f3a247…5088a477`](https://explorer-studio.genlayer.com/tx/0xc6f3a2477ae9a84982c43c7d80f71b1fb74149f189ffc66543e04f7b5088a477) |
-| ↳ payout emitted to the reporter         | `FINALIZED`     | `1000000000000000000` | [`0xec27b732…be90f06b`](https://explorer-studio.genlayer.com/tx/0xec27b732b060972fccf2b9ae8af3f15689f8cfde0ad0fc34b4bc69a4be90f06b) |
+| `create_bounty` locking 1 GEN            | `FINALIZED`     | `1000000000000000000` | [`0xe82381e3…599cc3c0`](https://explorer-studio.genlayer.com/tx/0xe82381e3261f7efb9a260870dd122a0068c53f52632e1eca281b9c3c599cc3c0) |
+| ↳ child deployed by the factory          | `FINALIZED`     | `1000000000000000000` | [`0x6aa3e1eb…fc8e0b5b`](https://explorer-studio.genlayer.com/tx/0x6aa3e1ebf5e6626635ef080705c6456ef19186a397cedf15f429a1f0fc8e0b5b) |
+| `submit_report("TRUE")` by the reporter  | `FINALIZED`     | 0                     | [`0xa5b8a6c6…5cc41dbf`](https://explorer-studio.genlayer.com/tx/0xa5b8a6c6e8f3b7082a6898cda4d68fa2d612ba5b3d32370c77796d8e5cc41dbf) |
+| `verify()` — leader + 5 validators fetch | `FINALIZED`     | 0                     | [`0x40076a3d…b699f303`](https://explorer-studio.genlayer.com/tx/0x40076a3db17c3e0dbe99f71df93d322daf8e57f760ce765c4b421dedb699f303) |
+| ↳ payout emitted to the reporter         | `FINALIZED`     | `1000000000000000000` | [`0xbfa8ca0f…37349c50`](https://explorer-studio.genlayer.com/tx/0xbfa8ca0f29e19db47c11d6609acbb3f3d5e9df2547bd42c1fc0b25ad37349c50) |
 
 Settled state read back from the child: `status=PAID`, `truth_verdict=TRUE`,
 `reported_verdict=TRUE`, `escrow_atto=0`,
 `evidence="https://api.github.com/repos/genlayerlabs/skills stargazers_count >= 10"`.
-Consensus: `MAJORITY_AGREE`, one round, votes `agree/agree/agree/idle/idle` from
-five distinct validators, `result_name` recorded on the finalized receipt.
+Consensus: `MAJORITY_AGREE`, votes `agree/agree/agree/idle/idle` from five
+distinct validators. `scripts/audit_payout_ledger.py` follows the emitted payout
+to its own transaction and confirms the reporter's ledger balance rose a full
+1 GEN (`value_credited=True`; 5.0 → 6.0 GEN across the run).
 
-Flow 2 — an unreported bounty is reclaimed after its deadline, with no AI at all
+Flow 2 — an expired bounty refuses a late report, then reclaims with no AI at all
 
-| step                                                     | explorer status | value                | tx                                                                                                                                  |
-| -------------------------------------------------------- | --------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `create_bounty`, deadline `2020-01-01T00:00:00`, 0.5 GEN | `FINALIZED`     | `500000000000000000` | [`0x8da1ea3f…399323e1`](https://explorer-studio.genlayer.com/tx/0x8da1ea3fcd3e947d8911124254357166da3b3b80161023a7ff2000a9399323e1) |
-| ↳ child deployed by the factory                          | `FINALIZED`     | `500000000000000000` | [`0xeab3ff8b…25423a20`](https://explorer-studio.genlayer.com/tx/0xeab3ff8b7ee9ef458062b62d5e4fb90f1f088ed4502735010d9f8fce25423a20) |
-| `reclaim_after_timeout()` by the poster                  | `FINALIZED`     | 0                    | [`0x2416f4c9…45151bb1`](https://explorer-studio.genlayer.com/tx/0x2416f4c9facf0cc92f61aa1e01f48f3573d8b802f2121320e4c7741345151bb1) |
-| ↳ refund emitted to the poster                           | `FINALIZED`     | `500000000000000000` | [`0x256c8da0…79a896ac`](https://explorer-studio.genlayer.com/tx/0x256c8da0056af8b4a4f45fa2d1bd38225620a6e8c0cc90de7c10e93779a896ac) |
+The timeout bounty is now created with a **near-future** deadline
+(`2026-09-27T17:17:53`) because `create_bounty` rejects a non-future one; the
+driver waits for it to pass, attempts a late report, and only then reclaims.
 
-Settled state: `status=REFUNDED`, `escrow_atto=0`. No `verify()` was ever called
-on this bounty, so no validator spent a single LLM call on it.
+| step                                                              | explorer status | value                | tx                                                                                                                                  |
+| ----------------------------------------------------------------- | --------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `create_bounty`, future deadline `2026-09-27T17:17:53`, 0.5 GEN    | `FINALIZED`     | `500000000000000000` | [`0x3e003ebb…e949bdfd`](https://explorer-studio.genlayer.com/tx/0x3e003ebb8e65f376659363631c0f97a2fe5fc6859af196479107fec6e949bdfd) |
+| ↳ child deployed by the factory                                    | `FINALIZED`     | `500000000000000000` | [`0xce0f4aa5…1381b3bb`](https://explorer-studio.genlayer.com/tx/0xce0f4aa5add57c4c67dd05343aa1dc432d927eb3fcf9f32ffa11189d1381b3bb) |
+| `submit_report("TRUE")` **after** the deadline — refused, stays `OPEN` | `FINALIZED`     | 0                    | [`0xc77a77b2…f54c9d80`](https://explorer-studio.genlayer.com/tx/0xc77a77b233c070e03b0e6ce0c42c655aa524e42429c9a934200a0884f54c9d80) |
+| `reclaim_after_timeout()` by the poster                            | `FINALIZED`     | 0                    | [`0x0290f3e1…1518bdee`](https://explorer-studio.genlayer.com/tx/0x0290f3e1fd5134bf58d18a629d7c1f28536f55c346b8973f132b96121518bdee) |
+| ↳ refund emitted to the poster                                      | `FINALIZED`     | `500000000000000000` | [`0x3d6430f5…07aa58dbc`](https://explorer-studio.genlayer.com/tx/0x3d6430f51693dea19a3e557dca02972e1776c9cc19626da695ec90b07aa58dbc) |
+
+The post-expiry report finalized as a **contract-level rejection**: the bounty
+was still `OPEN` when re-read, so the late verdict became no state and scheduled
+no verification — and the poster's reclaim then settled to `REFUNDED`
+(`escrow_atto=0`) exactly as if no report had ever arrived. No `verify()` ran on
+this bounty, so no validator spent an LLM call on it.
 
 Parent reading children (synchronous roll-up, one view call)
 
 ```
-aggregate_statuses()  -> by_status {OPEN: 1, PAID: 2, REFUNDED: 1}, escrow_total_atto 500000000000000000
-list_bounties()       -> count 4, total_created 4
+aggregate_statuses()  -> by_status {OPEN: 1, PAID: 3, REPORTED: 1, REJECTED: 1, REFUNDED: 1}, escrow_total_atto 3000000000000000000
+list_bounties()       -> count 7, total_created 7
 ```
 
-The `OPEN` entry and the extra `PAID` belong to an earlier partially-completed
-run against the same registry (see _Re-running after an interrupted run_ in
-`scripts/e2e_studionet.py`); the roll-up reports all four bounties because the
-registry indexes every bounty ever created against it, not just this run's.
+The registry indexes every bounty ever created against it, so the roll-up counts
+this E2E run's two children plus the five the live integration suite left behind —
+including a `REPORTED` child (`0x6736f2B2…`) that a poster `reclaim_after_timeout`
+attempt is recorded against yet never left `REPORTED` (see below), which is the
+race guard working on-chain.
 
 Ledger audit — `PAID` checked against money, not against a status field
 
@@ -447,26 +498,29 @@ transaction and re-reads the balances
 
 ```
 create_bounty_A          emits  1.000 GEN -> child A   FINALIZED / MAJORITY_AGREE  credited=True
-verify_A                 emits  1.000 GEN -> reporter   FINALIZED                   credited=True
+verify_A                 emits  1.000 GEN -> reporter   FINALIZED / NO_MAJORITY     credited=True
 create_bounty_B          emits  0.500 GEN -> child B   FINALIZED / MAJORITY_AGREE  credited=True
-reclaim_after_timeout_B  emits  0.500 GEN -> poster    FINALIZED                   credited=True
+reclaim_after_timeout_B  emits  0.500 GEN -> poster    FINALIZED / NO_MAJORITY     credited=True
 
-poster   52.5000 GEN     reporter  3.0000 GEN     child_A  0.0     child_B  0.0
+poster   8.0000 GEN     reporter  6.0000 GEN     child_A  0.0     child_B  0.0
 ```
 
-Those balances reconcile exactly: the poster paid `1 + 1 + 0.5 + 0.5` GEN into
-escrow across the runs and got `0.5` back; the reporter started the session with
-`1.0` GEN and received `1.0` twice. Every contract's escrow is drained to zero
-only through a transfer that the ledger confirms.
+Those balances reconcile exactly for this run: the poster locked `1.0 + 0.5` GEN
+into escrow across the two children and recovered `0.5` on the expired one, a net
+`1.0` that is precisely the reporter's `5.0 → 6.0` GEN rise. The `NO_MAJORITY`
+labels on the two transfers are the expected EOA-credit shape (validators do not
+re-execute a chain-layer credit) — `credited=True` and the balance delta are the
+authority, per item 5 below. Every contract's escrow is drained to zero only
+through a transfer that the ledger confirms.
 
 ## EVIDENCE: the integration suite's own transactions
 
 ```
 py -3.12 -m pytest tests/integration -m integration -v -s
-======================= 13 passed in 601.22s (0:10:01) ========================
+======================== 18 passed in 834.80s (0:13:54) ========================
 ```
 
-Console capture (excerpt): [`evidence/integration-pytest-run.txt`](evidence/integration-pytest-run.txt).
+Console capture: [`evidence/integration-pytest-run.txt`](evidence/integration-pytest-run.txt).
 
 A suite that asserts on receipts fetched from the same RPC that ran the consensus
 is only half-verified, and a console capture is not evidence at all. So the
@@ -475,85 +529,108 @@ bounties that run created are re-derived **from the deployed registry**
 re-fetched from the explorer:
 
 ```powershell
-py -3.12 scripts/collect_integration_evidence.py
-py -3.12 scripts/verify_explorer_evidence.py `
-    --evidence evidence/integration-evidence.json --audit none `
-    --registry 0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012 `
+py -3.12 scripts/collect_integration_evidence.py \
+    --registry 0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0 \
+    --out evidence/integration-evidence.json
+py -3.12 scripts/verify_explorer_evidence.py \
+    --evidence evidence/integration-evidence.json --audit none \
+    --registry 0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0 \
     --out evidence/explorer-verification-integration.json
 ```
 
-Result: **18 transactions, all `FINALIZED`; registry + 4 children, all
-`type=CONTRACT`, each storing the content-hash runner pin** — exit code 0
+Result: **22 transactions, all `FINALIZED`; the registry + 5 children, all
+`type=CONTRACT`, each storing the content-hash runner pin and byte-matching the
+tree** — exit code 0
 ([`evidence/explorer-verification-integration.json`](evidence/explorer-verification-integration.json)).
-The four `create_bounty` hashes the collector found on-chain match the four the
-suite printed, which is the cross-check that the run being verified is the run
-that happened.
+The five `create_bounty` hashes the collector found on-chain match the five the
+suite printed (its closing `bounty txs created by this run` block), which is the
+cross-check that the run being verified is the run that happened. The four
+`TestCreateBountyValidation` rejections created **no** child and never enter
+`list_bounties` — their `it-reject-*` ids appear only as reverted transactions.
 
-Bounty 1 — `it-465605650` — the two authorization guards. Child
-[`0x412829AA…cA74B1dD`](https://explorer-studio.genlayer.com/address/0x412829AA72fd44851adE05C1D77d719AcA74B1dD),
+Bounty 1 — `it-528060352` — the two authorization guards. Child
+[`0xF17B4CB9…3fa33cD2`](https://explorer-studio.genlayer.com/address/0xF17B4CB917Ad8F857b6b1b491f13cb1b3fa33cD2),
 still `OPEN` with its full `1 GEN` escrow:
 
 | step                                                  | value                 | tx                                                                                                                                  |
 | ----------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `create_bounty` (payable)                             | `1000000000000000000` | [`0x84a783a7…fa9fb190`](https://explorer-studio.genlayer.com/tx/0x84a783a7707b6c29012dedccc0ac1096557c13895afc4fa4b34111c2fa9fb190) |
-| ↳ child deployed by the factory, funded               | `1000000000000000000` | [`0xe121fc19…b09b5b6b`](https://explorer-studio.genlayer.com/tx/0xe121fc19a924fd41e1a429bcc7a82c35a2875b89d96a5e6d4170ae66b09b5b6b) |
-| `submit_report` **by the poster** — refused           | 0                     | [`0x76b69ad7…180b063b`](https://explorer-studio.genlayer.com/tx/0x76b69ad75628e7332ac35b414ad0f37cb0aa1d4b1c9a8c52b86d6cc7180b063b) |
-| `reclaim_after_timeout` **by a non-poster** — refused | 0                     | [`0x60dc9f74…83bae5c2`](https://explorer-studio.genlayer.com/tx/0x60dc9f74f96af8191143a977ab46293cf43fb2faabee21f631e8673483bae5c2) |
+| `create_bounty` (payable)                             | `1000000000000000000` | [`0x1df52db7…c396f084`](https://explorer-studio.genlayer.com/tx/0x1df52db79d81c41cc6a303978bf95825f1f2d87c09a4684fc538d014c396f084) |
+| ↳ child deployed by the factory, funded               | `1000000000000000000` | [`0x2e2b539c…00e1835e`](https://explorer-studio.genlayer.com/tx/0x2e2b539ced56e51f6adaaec313df2bdfde1150621e93881ad339c7eb00e1835e) |
+| `submit_report` **by the poster** — refused           | 0                     | [`0x82c10636…211a24833`](https://explorer-studio.genlayer.com/tx/0x82c106368639cda20403a049ec534e78d541ce55d9672c2c8d1dcda211a24833) |
+| `reclaim_after_timeout` **by a non-poster** — refused | 0                     | [`0xf37dfc90…e3709143`](https://explorer-studio.genlayer.com/tx/0xf37dfc90619e81afd6eaebbc9645f31636487df3af63f3fa1ca729e7e3709143) |
 
 Both guard transactions are `FINALIZED` — the _transaction_ succeeded, the _call_
 reverted with `[EXPECTED] …`. That is exactly what it means for a sender check to
 work, and the child's own state is the proof: no report was ever accepted, the
 escrow never moved.
 
-Bounty 2 — `it-465691969` — correct report, consensus-paid. Child
-[`0x50F75080…3a7a9673`](https://explorer-studio.genlayer.com/address/0x50F75080da59f7a718545e84234fE0d83a7a9673),
+Bounty 2 — `it-528147882` — correct report, consensus-paid. Child
+[`0x59DACFC6…5C1Cf186`](https://explorer-studio.genlayer.com/address/0x59DACFC695d1b420AcA57Db28B8C2d825C1Cf186),
 `PAID`, `reported_verdict=TRUE`, `truth_verdict=TRUE`, escrow now `0`:
 
 | step                                       | value                 | tx                                                                                                                                  |
 | ------------------------------------------ | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `create_bounty` (payable)                  | `1000000000000000000` | [`0x84be800b…c08a3d99`](https://explorer-studio.genlayer.com/tx/0x84be800b44b9475b7e6f7a216eef15a92f1f60d324b2f05834e04611c08a3d99) |
-| ↳ child deployed by the factory, funded    | `1000000000000000000` | [`0x326c79a8…f1c19f1d`](https://explorer-studio.genlayer.com/tx/0x326c79a821cdf572898943319ab35b73558d057e2ee80ca47cd90fa4f1c19f1d) |
-| `submit_report("TRUE")` by the reporter    | 0                     | [`0x0df2828c…b6c21c1b`](https://explorer-studio.genlayer.com/tx/0x0df2828cac578b77ae994b365150be8349584d29ede23ad48029ea56b6c21c1b) |
-| `verify()` — leader + 5 validators fetched | 0                     | [`0x61149707…c1fd1466`](https://explorer-studio.genlayer.com/tx/0x61149707e1a41d6130c164edd026cda114c5b9aef67f12aa00f826f9c1fd1466) |
-| ↳ payout emitted to the reporter           | `1000000000000000000` | [`0x1f04ac9a…3b43bb92`](https://explorer-studio.genlayer.com/tx/0x1f04ac9a30bc75b79d736bad10246cd7bfbe551ee187cddcc1a61e923b43bb92) |
+| `create_bounty` (payable)                  | `1000000000000000000` | [`0x0df2b096…6d66200e`](https://explorer-studio.genlayer.com/tx/0x0df2b09624ff82a46a30a56d6dc6d4f7fa7cb0c233aa239c1e39836e6d66200e) |
+| ↳ child deployed by the factory, funded    | `1000000000000000000` | [`0x5cfcf33d…dfe7afa9`](https://explorer-studio.genlayer.com/tx/0x5cfcf33d61ab015e99cb32d8bdd347b2d16c4a26ba1d107db2e8ba8ddfe7afa9) |
+| `submit_report("TRUE")` by the reporter    | 0                     | [`0x39447ece…cea6fe885`](https://explorer-studio.genlayer.com/tx/0x39447ece9b81415ed9fa8453385cf91d697934c6ce16312e9179ca9cea6fe885) |
+| `verify()` — leader + 5 validators fetched | 0                     | [`0x3f54dab8…0121d2eb0`](https://explorer-studio.genlayer.com/tx/0x3f54dab81a6dc1900891a74ac81800182a624e8ecd52602535b1b5d0121d2eb0) |
+| ↳ payout emitted to the reporter           | `1000000000000000000` | [`0x8c408d8e…5a6017c9`](https://explorer-studio.genlayer.com/tx/0x8c408d8ea13f13a902c6c14daaf0641c3dc7ceab33d3727deb32df105a6017c9) |
 
 `test_payout_moves_the_escrow` does not accept the `PAID` field as proof: it
 reads the reporter's balance before and after and requires the difference to
 equal the reward. That assertion is what caught the EOA-transfer bug documented
 in item 5 below.
 
-Bounty 3 — `it-465825012` — wrong report, rejected, nothing paid. Child
-[`0xa48a4366…BFf00499`](https://explorer-studio.genlayer.com/address/0xa48a4366bDD4787dbEf2b6075e82E246BFf00499),
+Bounty 3 — `it-528283922` — wrong report, rejected, nothing paid. Child
+[`0x62C5C5bB…DED6c46E`](https://explorer-studio.genlayer.com/address/0x62C5C5bB64Cfd541c3B6479805760466DED6c46E),
 `REJECTED`, `reported_verdict=FALSE` against `truth_verdict=TRUE`:
 
 | step                                    | value                 | tx                                                                                                                                  |
 | --------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `create_bounty` (payable)               | `1000000000000000000` | [`0x53844747…a543f908`](https://explorer-studio.genlayer.com/tx/0x5384474726609e65a76bc4c5d9f6561916e1e1f27feb5b6dd9c7e860a543f908) |
-| ↳ child deployed by the factory, funded | `1000000000000000000` | [`0x49d7e824…917ee698`](https://explorer-studio.genlayer.com/tx/0x49d7e824473cc4d055f2a6103d1e5e3fc5b1b8e9e0dab5eed99f2726917ee698) |
-| `submit_report("FALSE")`                | 0                     | [`0xfb5defcb…24bd93a7`](https://explorer-studio.genlayer.com/tx/0xfb5defcb85b772e4a6bc4e93d95e5d73a9db3f23c4668b305bc83bdb24bd93a7) |
-| `verify()`                              | 0                     | [`0xb3a28660…23e259e8`](https://explorer-studio.genlayer.com/tx/0xb3a28660db50afc17408c2cb599ae29e30e3c80958bb60823bf132fb23e259e8) |
+| `create_bounty` (payable)               | `1000000000000000000` | [`0x0d6ed98d…898eed57`](https://explorer-studio.genlayer.com/tx/0x0d6ed98dbae96befac68ae4da408a95a2b54f332f3f529b382d2d82b898eed57) |
+| ↳ child deployed by the factory, funded | `1000000000000000000` | [`0xeeab2607…844711d3`](https://explorer-studio.genlayer.com/tx/0xeeab2607bbb3c7f0e216305f214976141f2f0837154fef7829483795844711d3) |
+| `submit_report("FALSE")`                | 0                     | [`0x9e804f1e…142a29a47`](https://explorer-studio.genlayer.com/tx/0x9e804f1ea8c00331f96abbe3031221fd93bfb11a37b52a1d0ec347b142a29a47) |
+| `verify()`                              | 0                     | [`0x7cc934be…bc6ac048`](https://explorer-studio.genlayer.com/tx/0x7cc934be0f666b008ac6d7a831ebd4a6c234337455a18dfdcb681db5bc6ac048) |
 
 The child's explorer balance is still `1000000000000000000` and it emitted **no**
 value transaction — a rejected report is a settled state, not a payout with a
 status label attached.
 
-Bounty 4 — `it-465960907` — an absent repository yields a verdict, not a hang.
-Child [`0xa36cd793…E01A1aBF`](https://explorer-studio.genlayer.com/address/0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF),
-claim `genlayerlabs/definitely-not-a-real-repo-9f3a1c >= 10` stars. A reproducible
+Bounty 4 — `it-528408310` — an absent repository yields a verdict, not a hang.
+Child [`0xF837df49…F139f502`](https://explorer-studio.genlayer.com/address/0xF837df49a2847d18152d87ED736a9f10F139f502),
+claim `genlayerlabs/definitely-not-a-real-repo-* >= 10` stars. A reproducible
 HTTP 404 derives `repo_ok=False`, so the truth is `FALSE` and the reporter who
 said `FALSE` is paid: `PAID`, `fact_check_repo_ok=false`, escrow `0`.
 
 | step                                    | value                 | tx                                                                                                                                  |
 | --------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `create_bounty` (payable)               | `1000000000000000000` | [`0xf1b98140…fe7c2789`](https://explorer-studio.genlayer.com/tx/0xf1b98140945a9e819246d2dc8c4a0b9b2d14a7346be4696d015f0cfdfe7c2789) |
-| ↳ child deployed by the factory, funded | `1000000000000000000` | [`0x931cee17…085e078e`](https://explorer-studio.genlayer.com/tx/0x931cee172af69e80636a161120f44ac432a633271f2ddb949122c809085e078e) |
-| `submit_report("FALSE")`                | 0                     | [`0xdd632f7c…bf069c8b`](https://explorer-studio.genlayer.com/tx/0xdd632f7c8c5f68324f29b758814a15467f81f0560123f49197723d9bbf069c8b) |
-| `verify()`                              | 0                     | [`0x14b39c65…edcaa19d`](https://explorer-studio.genlayer.com/tx/0x14b39c653692d0cb6b23b260af579134509d369d793ed38325355f7fedcaa19d) |
-| ↳ payout emitted to the reporter        | `1000000000000000000` | [`0x024f16be…d1b74c4f`](https://explorer-studio.genlayer.com/tx/0x024f16be68a2d086dada5c1a336a2bf4193a0bfcc31bc90f8c7cf428d1b74c4f) |
+| `create_bounty` (payable)               | `1000000000000000000` | [`0xb7529d44…105617f0`](https://explorer-studio.genlayer.com/tx/0xb7529d44cf27396487a8ba078bb04b5f7ddf46b668ee2f34f5cd2255105617f0) |
+| ↳ child deployed by the factory, funded | `1000000000000000000` | [`0x8208af59…5c2e1bc2`](https://explorer-studio.genlayer.com/tx/0x8208af5999c1556609c9de21fb2dfca4512aa98d98eed3acdc60bac55c2e1bc2) |
+| `submit_report("FALSE")`                | 0                     | [`0xa6ae3095…892ec666`](https://explorer-studio.genlayer.com/tx/0xa6ae309512e3e48495cd246e736ed8ed5c886fbfb5dff9642c53ccb1892ec666) |
+| `verify()`                              | 0                     | [`0xdd341944…c1bfb833`](https://explorer-studio.genlayer.com/tx/0xdd341944a0f424e2b5787b91a01ea2c080ee7c864792a5b0129f4881c1bfb833) |
+| ↳ payout emitted to the reporter        | `1000000000000000000` | [`0x823b85c6…0c9cc3f5`](https://explorer-studio.genlayer.com/tx/0x823b85c66fc80a8d3e9ddadae74074a3cfc1e23babc07b2d3402e97e0c9cc3f5) |
 
-The `verify()` receipts for these bounties carry `result_name = MAJORITY_AGREE`
-with `num_of_initial_validators = 5`; the suite asserts the vote breakdown rather
-than trusting the call's return value
+Bounty 5 — `it-528801509` — **an on-time report cannot be undercut by a reclaim**
+(fix 3, the exact race, live on studionet). Child
+[`0x6736f2B2…bDdF7E63`](https://explorer-studio.genlayer.com/address/0x6736f2B2d77b85D2060Cd2D93f77F869bDdF7E63):
+the reporter files a valid report (`submit_report` `FINALIZED`), then the **poster**
+attempts `reclaim_after_timeout()` before `verify()` has ever run:
+
+| step                                              | value                 | tx                                                                                                                                  |
+| ------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `create_bounty` (payable)                         | `1000000000000000000` | [`0x7e300624…d90c2077`](https://explorer-studio.genlayer.com/tx/0x7e30062405db86571355cbd8fb5006dfb125c24a4d28009664609e7cd90c2077) |
+| ↳ child deployed by the factory, funded           | `1000000000000000000` | [`0x4417f318…ba98fa88`](https://explorer-studio.genlayer.com/tx/0x4417f3184e45ca1fcf3d4ac239eee316d9dac3fdb686f5f333daf704ba98fa88) |
+| `submit_report("TRUE")` by the reporter (on time) | 0                     | [`0xb4be08c1…28381b1c`](https://explorer-studio.genlayer.com/tx/0xb4be08c13436b0ece6a75116e46fbcb926bde5d54d89b0781fac2ff128381b1c) |
+| `reclaim_after_timeout()` **by the poster** — refused, child stays `REPORTED` | 0 | [`0x69a807e8…7c6132f3`](https://explorer-studio.genlayer.com/tx/0x69a807e884dbbf9310a2d92943300394167c57f5608e6f35898562e27c6132f3) |
+
+The reclaim transaction is `FINALIZED`, but the child **never left `REPORTED`** —
+the explorer still shows it holding its full `1000000000000000000` escrow with a
+recorded `reported_verdict=TRUE` and no payout. That is the state gate firing on
+chain: a timely, unverified report blocks the refund until `verify()` settles it.
+
+The `verify()` receipts for the paid / rejected bounties carry
+`result_name = MAJORITY_AGREE` with `num_of_initial_validators = 5`; the suite
+asserts the vote breakdown rather than trusting the call's return value
 (`test_validators_actually_ran_and_agreed`).
 
 ## What the real installed SDK did differently from the docs
@@ -664,8 +741,8 @@ send <to> <amount>` exits 0, prints nothing and moves no GEN. Value-bearing
     whichever conftest was collected _last_. Running `pytest -q` from the repo
     root therefore failed 4 direct-mode tests with `ImportError: cannot import
 name 'CLAIM_SOURCE' from 'conftest' (... tests\integration\conftest.py)`,
-    while `pytest tests/direct -q` passed 51/51 — a harness bug that only
-    appeared in the exact command a reviewer is most likely to type. Fix: the
+    while `pytest tests/direct -q` passed the whole direct suite — a harness bug
+    that only appeared in the exact command a reviewer is most likely to type. Fix: the
     shared constants and helpers live in `tests/direct/direct_harness.py` and
     `tests/integration/netconfig.py` (unique module names), and `conftest.py`
     keeps only fixtures and hooks, which pytest resolves per directory anyway.

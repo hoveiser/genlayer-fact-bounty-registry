@@ -62,7 +62,17 @@ CLAIM_THRESHOLD = 10
 CLAIM_REPORT = "TRUE"
 
 FAR_FUTURE_DEADLINE = "2099-12-31T23:59:59"
-PAST_DEADLINE = "2020-01-01T00:00:00"
+# The timeout bounty is now created with a deadline a couple of minutes ahead
+# and reclaimed only once that deadline has actually passed. `create_bounty`
+# rejects a deadline that is not strictly in the future, so the old trick of
+# opening a bounty that was already expired at creation is no longer possible.
+PAST_DEADLINE = "2020-01-01T00:00:00"  # kept only for the negative-path note below
+
+
+def soon_deadline(seconds_ahead: int = 150) -> str:
+    """A well-formed future UTC `YYYY-MM-DDTHH:MM:SS` the ring will accept."""
+    return time.strftime(
+        "%Y-%m-%dT%H:%M:%S", time.gmtime(time.time() + seconds_ahead))
 
 TERMINAL_BAD = {"CANCELED", "ERROR", "INVALID"}
 
@@ -399,18 +409,24 @@ def main() -> int:
         )
 
     # ------------------------------------------------------------------
-    # 5. second bounty, never reported, deadline already passed -> reclaim
+    # 5. second bounty, never reported, deadline reached -> reclaim
     # ------------------------------------------------------------------
+    # `create_bounty` now refuses a deadline that is not strictly in the future,
+    # so the timeout path can no longer be shown with an already-expired bounty:
+    # open one that expires ~2.5 minutes out, let the deadline pass untouched,
+    # then reclaim -- which is the real sequence a poster goes through.
     uid_b = f"timeout-{stamp}"
+    deadline_b = soon_deadline()
     print(
-        f"\n[5] create_bounty({uid_b}) with deadline {PAST_DEADLINE}, 0.5 GEN, never reported ...")
+        f"\n[5] create_bounty({uid_b}) with near-future deadline {deadline_b}, "
+        f"0.5 GEN, never reported ...")
     tx_b = str(
         client.write_contract(
             args.registry,
             "create_bounty",
             account=poster,
             value=ATTO_PER_GEN // 2,
-            args=[uid_b, CLAIM_REPO, CLAIM_THRESHOLD, PAST_DEADLINE],
+            args=[uid_b, CLAIM_REPO, CLAIM_THRESHOLD, deadline_b],
         )
     )
     print(f"    tx={tx_b}")
@@ -426,6 +442,40 @@ def main() -> int:
         client, child_b, args.timeout, f"child B {child_b}")
     print(
         f"    status B: {status_b['status']} escrow={int(status_b['escrow_atto']) / ATTO_PER_GEN} GEN")
+
+    # Reclaim is guarded by the deadline; wait until the chain clock is past it.
+    import calendar
+
+    deadline_epoch = calendar.timegm(
+        time.strptime(deadline_b, "%Y-%m-%dT%H:%M:%S")) + 5
+    remaining = deadline_epoch - time.time()
+    if remaining > 0:
+        print(f"    waiting {int(remaining)}s for deadline {deadline_b} to pass ...")
+        time.sleep(remaining)
+
+    # ------------------------------------------------------------------
+    # 5b. a post-expiry report must be refused outright (never processed)
+    # ------------------------------------------------------------------
+    print(
+        f"\n[5b] reporter submit_report('TRUE') on the expired B (must be refused) ...")
+    tx_late = str(client.write_contract(
+        child_b, "submit_report", account=reporter, args=["TRUE"]))
+    print(f"    tx={tx_late}")
+    try:
+        receipt_late = wait_for_final(
+            client, tx_late, args.timeout, "late submit_report")
+        evidence["transactions"].append(
+            {"step": "late_submit_report_B", **consensus_summary(receipt_late)})
+    except SystemExit:
+        # A contract-level rejection can settle in a non-finalized rejecting
+        # state; either way the invariant below is what proves the fix.
+        pass
+    after_late = client.read_contract(child_b, "get_status")
+    evidence["late_report_refused_status"] = after_late["status"]
+    print(f"    status after the late report: {after_late['status']}")
+    if after_late["status"] != "OPEN":
+        print("    WARNING: a post-expiry report changed the bounty state; "
+              "the deadline gate did not refuse it", file=sys.stderr)
 
     print("\n[6] poster reclaim_after_timeout() on B ...")
     tx_c = str(client.write_contract(

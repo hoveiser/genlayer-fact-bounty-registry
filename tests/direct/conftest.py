@@ -68,12 +68,14 @@ from direct_harness import (
     CLAIM_REPO,
     CLAIM_SOURCE,
     CLAIM_THRESHOLD,
+    CREATED_AT,
     DEADLINE,
     POSTER_SEED,
     REGISTRY_SEED,
     REWARD_ATTO,
     CrossContractBus,
     make_address,
+    set_datetime,
 )
 
 #: message temp files Windows would not let the harness delete mid-run
@@ -166,9 +168,16 @@ def deploy_claim(direct_vm, direct_deploy):
 
 
 @pytest.fixture
-def claim(deploy_claim):
-    """The default bounty, ready to be reported on: a 1000-star threshold."""
-    return deploy_claim()
+def claim(deploy_claim, direct_vm):
+    """The default bounty, ready to be reported on: a 1000-star threshold.
+
+    The clock is pinned to ``CREATED_AT`` right after deployment: direct mode
+    otherwise reports the real wall clock, and `submit_report` now refuses a
+    report once the bounty's deadline has passed.
+    """
+    contract = deploy_claim()
+    set_datetime(direct_vm, CREATED_AT)
+    return contract
 
 
 @pytest.fixture

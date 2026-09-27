@@ -17,14 +17,19 @@ import hashlib
 import pytest
 
 from direct_harness import (
+    AFTER_DEADLINE,
     CLAIM_REPO,
     CLAIM_SOURCE,
     CLAIM_THRESHOLD,
+    CREATED_AT,
     DEADLINE,
+    MALFORMED_DEADLINE,
+    PAST_DEADLINE,
     REWARD_ATTO,
     REGISTRY_SOURCE,
     addr_hex,
     make_address,
+    set_datetime,
 )
 
 pytestmark = pytest.mark.direct
@@ -34,10 +39,17 @@ SOURCE_URL = f"https://api.github.com/repos/{CLAIM_REPO}"
 
 @pytest.fixture
 def registry(direct_vm, direct_deploy):
-    """A freshly deployed registry owned by its deployer."""
+    """A freshly deployed registry owned by its deployer, with a pinned clock.
+
+    ``create_bounty`` now validates the deadline against the transaction time,
+    and direct mode's un-warped clock is the real wall clock -- so the fixture
+    pins it to ``CREATED_AT``, before the default ``DEADLINE``.
+    """
     owner = make_address("registry-owner")
     direct_vm.sender = owner
-    return direct_deploy(str(REGISTRY_SOURCE))
+    contract = direct_deploy(str(REGISTRY_SOURCE))
+    set_datetime(direct_vm, CREATED_AT)
+    return contract
 
 
 @pytest.fixture
@@ -176,6 +188,97 @@ def test_bounty_ids_are_unique(registry, direct_vm, bus):
 def test_get_bounty_address_rejects_an_unknown_id(registry, direct_vm):
     with direct_vm.expect_revert("unknown bounty_id 'nope'"):
         registry.get_bounty_address("nope")
+
+
+# ---------------------------------------------------------------------------
+# Claim input validation -- before any child deployment is scheduled
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "repo",
+    [
+        "not-a-repo",              # no separator at all
+        "",                        # empty
+        "   ",                     # blank once stripped
+        "owner/",                  # empty name
+        "/repo",                   # empty owner
+        "a//b",                    # empty segment between separators
+        "owner/repo/extra",        # two separators is not `owner/name`
+        "has space/repo",          # whitespace inside a segment
+        "user@host/repo",          # characters GitHub does not allow
+        "-owner/repo",             # segment may not start with a separator
+        "owner/repo.",             # ... nor end with one
+    ],
+)
+def test_create_bounty_rejects_a_malformed_repository_without_deploying(
+    registry, direct_vm, bus, repo
+):
+    direct_vm.value = REWARD_ATTO
+    with direct_vm.expect_revert("must look like 'owner/name'"):
+        registry.create_bounty("b1", repo, CLAIM_THRESHOLD, DEADLINE)
+    # The rejection happens before `gl.deploy_contract`, so no child deploy was
+    # ever scheduled and the registry index is still empty.
+    assert bus.deploys == []
+    assert registry.list_bounties()["count"] == 0
+
+
+@pytest.mark.parametrize("threshold", [0])
+def test_create_bounty_rejects_a_non_positive_threshold_without_deploying(
+    registry, direct_vm, bus, threshold
+):
+    direct_vm.value = REWARD_ATTO
+    with direct_vm.expect_revert("threshold must be positive"):
+        registry.create_bounty("b1", CLAIM_REPO, threshold, DEADLINE)
+    assert bus.deploys == []
+    assert registry.list_bounties()["count"] == 0
+
+
+@pytest.mark.parametrize(
+    "deadline_at, needle",
+    [
+        (PAST_DEADLINE, "must be in the future"),
+        (CREATED_AT[:19], "must be in the future"),  # equals *now*, not after it
+        (MALFORMED_DEADLINE, "YYYY-MM-DDTHH:MM:SS"),  # 19 chars, wrong shape
+        ("nope", "YYYY-MM-DDTHH:MM:SS"),
+        ("2026-13-01T00:00:00Z", "YYYY-MM-DDTHH:MM:SS"),  # shape ok, month 13 is not
+    ],
+)
+def test_create_bounty_rejects_a_past_or_malformed_deadline_without_deploying(
+    registry, direct_vm, bus, deadline_at, needle
+):
+    """A deadline that is not strictly after the current on-chain time cannot bound
+    a bounty: it is either already unreclaimable-by-report or unorderable against
+    real timestamps. Either way it must revert before the child deploy."""
+    direct_vm.value = REWARD_ATTO
+    with direct_vm.expect_revert(needle):
+        registry.create_bounty("b1", CLAIM_REPO, CLAIM_THRESHOLD, deadline_at)
+    assert bus.deploys == []
+    assert registry.list_bounties()["count"] == 0
+
+
+def test_rejected_creations_leave_the_factory_state_untouched(
+    registry, direct_vm, bus
+):
+    """After three rejected attempts the first accepted bounty still deploys with
+    the *first* salt nonce -- rejections did not burn counters or index entries."""
+    direct_vm.value = REWARD_ATTO
+    with direct_vm.expect_revert("must look like 'owner/name'"):
+        registry.create_bounty("bad1", "nope nope", CLAIM_THRESHOLD, DEADLINE)
+    with direct_vm.expect_revert("threshold must be positive"):
+        registry.create_bounty("bad2", CLAIM_REPO, 0, DEADLINE)
+    set_datetime(direct_vm, AFTER_DEADLINE)
+    with direct_vm.expect_revert("must be in the future"):
+        registry.create_bounty("bad3", CLAIM_REPO, CLAIM_THRESHOLD, DEADLINE)
+    assert bus.deploys == []
+
+    # Back to a live clock: the first valid creation deploys as if nothing had
+    # been tried before it.
+    set_datetime(direct_vm, CREATED_AT)
+    child = registry.create_bounty("good", CLAIM_REPO, CLAIM_THRESHOLD, DEADLINE)
+    assert len(bus.deploys) == 1
+    assert int(bus.deploys[0]["salt_nonce"]) == 1
+    assert child.as_hex == _child_address_of(direct_vm, 1)
+    listing = registry.list_bounties()
+    assert [entry["bounty_id"] for entry in listing["bounties"]] == ["good"]
 
 
 # ---------------------------------------------------------------------------

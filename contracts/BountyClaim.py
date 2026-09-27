@@ -75,6 +75,73 @@ def _normalize_datetime(raw: str) -> str:
     return str(raw)[:DATETIME_PREFIX_LEN]
 
 
+def _valid_datetime(raw: str) -> bool:
+    """True only when `raw` starts with a well-formed `YYYY-MM-DDTHH:MM:SS` UTC stamp.
+
+    Fixed-width positional check: digits at the documented offsets, and `-`/`T`/`:`
+    at theirs. Every deadline comparison in this contract family is a
+    lexicographic comparison of that 19-character prefix, so a string which does
+    not normalise to a chronological ordering must never be stored at all --
+    otherwise '2026-01-02 00:00:00' (space instead of 'T') would silently pass a
+    length check yet sort against every real timestamp in the wrong order.
+    """
+    stamp = str(raw)
+    if len(stamp) < DATETIME_PREFIX_LEN:
+        return False
+    stamp = stamp[:DATETIME_PREFIX_LEN]
+    if stamp[4] != "-" or stamp[7] != "-":
+        return False
+    if stamp[10] != "T":
+        return False
+    if stamp[13] != ":" or stamp[16] != ":":
+        return False
+    digit_positions = (0, 1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18)
+    for index in digit_positions:
+        if stamp[index] < "0" or stamp[index] > "9":
+            return False
+    # Zero-padded two-digit fields compare correctly as strings: month 13 is
+    # not a month, and '2026-13-01T00:00:00' would otherwise order as if it were.
+    if stamp[5:7] < "01" or stamp[5:7] > "12":
+        return False
+    if stamp[8:10] < "01" or stamp[8:10] > "31":
+        return False
+    if stamp[11:13] > "23":
+        return False
+    if stamp[14:16] > "59" or stamp[17:19] > "59":
+        return False
+    return True
+
+
+def _valid_repo_shape(name: str) -> bool:
+    """True only for a normalised, well-formed GitHub `owner/name` repository.
+
+    `name` is expected to already be stripped and lower-cased. Exactly one
+    separator, both sides non-empty, and only the characters GitHub allows
+    (letters, digits, and `.`, `-`, `_` inside a segment). A bare `'/' in name`
+    test would accept 'a//b', '/x' or 'x/' -- claims that can never resolve,
+    which must not be spendable as bounties or child deployments.
+    """
+    parts = name.split("/")
+    if len(parts) != 2:
+        return False
+    for part in parts:
+        if len(part) == 0:
+            return False
+        first = part[0]
+        last = part[len(part) - 1]
+        if first == "-" or first == "." or first == "_":
+            return False
+        if last == "-" or last == "." or last == "_":
+            return False
+        for ch in part:
+            is_lower = ch >= "a" and ch <= "z"
+            is_digit = ch >= "0" and ch <= "9"
+            is_sep = ch == "-" or ch == "." or ch == "_"
+            if not (is_lower or is_digit or is_sep):
+                return False
+    return True
+
+
 @gl.evm.contract_interface
 class Payee:
     """Declared recipient of a value transfer that lives on the chain layer.
@@ -185,13 +252,13 @@ class BountyClaim(gl.Contract):
         registry: Address,
     ) -> None:
         repo = str(repo_full_name).strip().lower()
-        if "/" not in repo:
+        if not _valid_repo_shape(repo):
             raise gl.vm.UserError(
                 f"{ERROR_EXPECTED} repo_full_name must look like 'owner/name', got '{repo_full_name}'"
             )
         if int(threshold) <= 0:
             raise gl.vm.UserError(f"{ERROR_EXPECTED} threshold must be positive")
-        if len(_normalize_datetime(deadline_at)) != DATETIME_PREFIX_LEN:
+        if not _valid_datetime(deadline_at):
             raise gl.vm.UserError(
                 f"{ERROR_EXPECTED} deadline_at must be 'YYYY-MM-DDTHH:MM:SS' UTC, got '{deadline_at}'"
             )
@@ -217,12 +284,24 @@ class BountyClaim(gl.Contract):
     # ------------------------------------------------------------------
     @gl.public.write
     def submit_report(self, verdict: str) -> str:
-        """Assert that the claim is TRUE or FALSE. First report wins."""
+        """Assert that the claim is TRUE or FALSE. First on-time report wins.
+
+        A report submitted after `deadline_at` has passed is refused outright:
+        it never becomes state and verification is never scheduled for it, so
+        the poster's refund path cannot be blocked by a stale claim.
+        """
         normalized = str(verdict).strip().upper()
         if normalized not in (VERDICT_TRUE, VERDICT_FALSE):
             raise gl.vm.UserError(f"{ERROR_EXPECTED} verdict must be 'TRUE' or 'FALSE', got '{verdict}'")
         if self.status != STATUS_OPEN:
             raise gl.vm.UserError(f"{ERROR_EXPECTED} bounty {self.bounty_id} is {self.status}, not open")
+
+        now = _normalize_datetime(gl.message_raw["datetime"])
+        if now > self.deadline_at:
+            raise gl.vm.UserError(
+                f"{ERROR_EXPECTED} bounty {self.bounty_id} closed at {self.deadline_at}; "
+                f"reports submitted after the deadline are not accepted (now {now})"
+            )
 
         sender = gl.message.sender_address
         if sender.as_hex == self.poster.as_hex:
@@ -275,9 +354,17 @@ class BountyClaim(gl.Contract):
     def reclaim_after_timeout(self) -> str:
         """Poster reclaims escrow once the deadline passed and nothing was paid.
 
-        Covers both mandated reclaim paths: a bounty nobody ever reported (no
-        verification was ever needed), and a bounty whose report was wrong or whose
-        source stayed unreachable.
+        Only reachable from states where no timely report is still owed its
+        chance at consensus:
+          * OPEN       -- nobody ever reported; no verification is needed;
+          * REJECTED   -- the report was verified and contradicted the truth;
+          * UNRESOLVED -- verification concluded without a verdict.
+
+        A REPORTED bounty is *never* refundable, even past its deadline: the
+        report was accepted on time and is owed a verification round. The poster
+        may trigger `verify()` themselves at any time to settle the bounty and
+        unlock this path -- an on-time report can be undercut by a refund only
+        after consensus has had its chance at it.
         """
         if gl.message.sender_address.as_hex != self.poster.as_hex:
             raise gl.vm.UserError(f"{ERROR_EXPECTED} only the poster may reclaim")
@@ -285,6 +372,11 @@ class BountyClaim(gl.Contract):
             raise gl.vm.UserError(f"{ERROR_EXPECTED} bounty {self.bounty_id} was already paid out")
         if self.status == STATUS_REFUNDED:
             raise gl.vm.UserError(f"{ERROR_EXPECTED} bounty {self.bounty_id} was already reclaimed")
+        if self.status == STATUS_REPORTED:
+            raise gl.vm.UserError(
+                f"{ERROR_EXPECTED} bounty {self.bounty_id} has a report awaiting verification; "
+                f"call verify() to settle it before reclaiming"
+            )
 
         now = _normalize_datetime(gl.message_raw["datetime"])
         if now < self.deadline_at:

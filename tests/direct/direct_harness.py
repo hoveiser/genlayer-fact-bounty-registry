@@ -29,10 +29,18 @@ REGISTRY_SOURCE = CONTRACTS_DIR / "BountyRegistry.py"
 
 # studionet emits `gl.message_raw["datetime"]` as
 # "2026-09-26T20:06:34.271991Z"; direct mode's default has the same shape.
+# The un-warped default is the real wall clock, and the lifecycle is now
+# time-gated on every edge (create_bounty needs a future deadline, reports
+# need one that has not passed), so the fixtures pin the clock to CREATED_AT
+# via ``set_datetime`` before letting a test interact with a bounty.
 CREATED_AT = "2026-01-01T00:00:00.000000Z"
 DEADLINE = "2026-01-02T00:00:00"
 AFTER_DEADLINE = "2026-01-03T00:00:00.000000Z"
 BEFORE_DEADLINE = "2026-01-01T12:00:00.000000Z"
+PAST_DEADLINE = "2025-12-31T23:59:59"
+# 19 characters long -- the old length-only format check accepted it -- but the
+# separator sits where the 'T' belongs, so it cannot be compared chronologically.
+MALFORMED_DEADLINE = "2026-01-02 00:00:00"
 
 # GEN has 18 decimals, so every amount here is a plain atto-scale u256 integer.
 REWARD_ATTO = 5_000_000_000_000_000_000  # 5 GEN

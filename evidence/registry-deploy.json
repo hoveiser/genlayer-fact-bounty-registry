@@ -1,0 +1,13 @@
+{
+  "network": {
+    "name": "studionet",
+    "chain_id": 61999
+  },
+  "deployer": "0x3de43AA2f7162c80af98abe78222aE0Cdf83c506",
+  "deploy_tx": "0x6307f71d0f4072dfa4e783d46c8daea18750e68dd5dee950fd20fab489940e33",
+  "registry": "0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0",
+  "explorer_type": "CONTRACT",
+  "status_name": "FINALIZED",
+  "result_name": "MAJORITY_AGREE",
+  "source_chars": 53914
+}

@@ -57,8 +57,14 @@ def test_created_at_comes_from_the_transaction_timestamp(direct_vm, deploy_claim
     "repo, threshold, deadline_at, needle",
     [
         ("not-a-repo", 1000, DEADLINE, "owner/name"),
+        ("owner/", 1000, DEADLINE, "owner/name"),  # empty segment, not just no '/'
+        ("a//b", 1000, DEADLINE, "owner/name"),
         ("genlayerlabs/genlayer", 0, DEADLINE, "threshold must be positive"),
         ("genlayerlabs/genlayer", 1000, "nope", "YYYY-MM-DDTHH:MM:SS"),
+        # 19 characters, wrong separator: length-only checks called this valid
+        ("genlayerlabs/genlayer", 1000, "2026-01-02 00:00:00", "YYYY-MM-DDTHH:MM:SS"),
+        # shape and length perfect, month 13 is not a month
+        ("genlayerlabs/genlayer", 1000, "2026-13-01T00:00:00", "YYYY-MM-DDTHH:MM:SS"),
     ],
 )
 def test_constructor_rejects_unusable_claims(
@@ -107,6 +113,49 @@ def test_verdict_must_be_true_or_false(claim, direct_vm, reporter):
     direct_vm.sender = reporter
     with direct_vm.expect_revert("verdict must be 'TRUE' or 'FALSE'"):
         claim.submit_report("MAYBE")
+
+
+# ---------------------------------------------------------------------------
+# The deadline gate
+# ---------------------------------------------------------------------------
+def test_a_report_after_the_deadline_is_refused_and_never_verified(
+    claim, direct_vm, bus, reporter, poster
+):
+    """Expiry must close the bounty outright, not merely make it racy.
+
+    No web mock is registered on purpose: if `submit_report` had accepted the
+    late verdict and scheduled anything, the missing mock would surface. The
+    state must be byte-for-byte what it was before the attempt.
+    """
+    set_datetime(direct_vm, AFTER_DEADLINE)
+    direct_vm.sender = reporter
+    with direct_vm.expect_revert("reports submitted after the deadline are not accepted"):
+        claim.submit_report("TRUE")
+
+    # Nothing became reportable, so verification still sees no report at all...
+    direct_vm.sender = poster
+    with direct_vm.expect_revert("nothing to verify"):
+        claim.verify()
+    # ... and the poster's refund path is untouched by the refused report.
+    assert claim.reclaim_after_timeout() == "REFUNDED"
+    assert bus.total_sent(reporter) == 0
+
+
+def test_a_report_arriving_exactly_at_the_deadline_is_still_on_time(
+    claim, serve_github, direct_vm, reporter
+):
+    """The boundary is inclusive: 'now > deadline' rejects, 'now == deadline' does not.
+
+    Strict inequality is what keeps a report filed in the final second alive;
+    the equality case must therefore be accepted, not silently written off as
+    late by an off-by-one comparison.
+    """
+    serve_github("genlayerlabs/genlayer", 5000)
+    set_datetime(direct_vm, DEADLINE + ".500000Z")  # same normalised 19-char stamp
+    direct_vm.sender = reporter
+
+    assert claim.submit_report("TRUE") == "TRUE"
+    assert claim.get_status()["status"] == "REPORTED"
 
 
 # ---------------------------------------------------------------------------
@@ -316,6 +365,39 @@ def test_reclaim_is_single_use(claim, direct_vm, poster):
     direct_vm.sender = poster
     assert claim.reclaim_after_timeout() == "REFUNDED"
     with direct_vm.expect_revert("was already reclaimed"):
+        claim.reclaim_after_timeout()
+
+
+# ---------------------------------------------------------------------------
+# The reclaim/report race
+# ---------------------------------------------------------------------------
+def test_an_on_time_report_is_not_undercut_by_a_reclaim(
+    claim, serve_github, direct_vm, bus, reporter, poster
+):
+    """A report filed one second before expiry still owes consensus, not a refund.
+
+    The bug this pins: the poster watches the clock, the deadline passes, and
+    `reclaim_after_timeout` pays out while the bounty sits in REPORTED with a
+    timely verdict nobody has verified yet -- the reporter can never be paid.
+    Reclaim must stay blocked until `verify()` has had its chance; settlement
+    itself must still work afterwards.
+    """
+    serve_github("genlayerlabs/genlayer", 5000)
+    set_datetime(direct_vm, BEFORE_DEADLINE)  # the deadline is still ahead
+    direct_vm.sender = reporter
+    assert claim.submit_report("TRUE") == "TRUE"
+
+    set_datetime(direct_vm, AFTER_DEADLINE)
+    direct_vm.sender = poster
+    with direct_vm.expect_revert("report awaiting verification"):
+        claim.reclaim_after_timeout()
+    assert bus.total_sent(poster) == 0  # the refund really was not emitted
+
+    # The blocked poster is not stuck: verifying settles the bounty for real.
+    assert claim.verify() == "PAID"
+    assert bus.transfers == [(reporter.as_hex, REWARD_ATTO)]
+    # Settled, so reclaim is refused on the paid-out ground, not the race one.
+    with direct_vm.expect_revert("was already paid out"):
         claim.reclaim_after_timeout()
 
 

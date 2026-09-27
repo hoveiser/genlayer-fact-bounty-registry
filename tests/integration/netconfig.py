@@ -23,8 +23,21 @@ SOURCE_URL = f"https://api.github.com/repos/{CLAIM_REPO}"
 # Deadlines are plain UTC ISO-8601 strings; the contract compares the
 # fixed-width 'YYYY-MM-DDTHH:MM:SS' prefix lexicographically.
 FAR_FUTURE = "2099-12-31T23:59:59"
+# Already expired: `create_bounty` must refuse it before any child is deployed.
+PAST_DEADLINE = "2020-01-01T00:00:00"
+# 19 characters, but the separator sits where the 'T' belongs -- a length-only
+# format check used to wave this through.
+MALFORMED_DEADLINE = "2099-12-31 23:59:59"
 
-DEFAULT_REGISTRY = "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012"
+
+def soon_deadline(seconds_ahead: int = 150) -> str:
+    """A well-formed UTC deadline `seconds_ahead` in the future."""
+    import time
+
+    return time.strftime("%Y-%m-%dT%H:%M:%S",
+                         time.gmtime(time.time() + seconds_ahead))
+
+DEFAULT_REGISTRY = "0x07B36f7A9CfE15eF8baFfCd66dA951E1d3125dA0"
 
 
 def load_dotenv() -> None:
