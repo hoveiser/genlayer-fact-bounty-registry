@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import (
+from direct_harness import (
     AFTER_DEADLINE,
     BEFORE_DEADLINE,
     CLAIM_REPO,

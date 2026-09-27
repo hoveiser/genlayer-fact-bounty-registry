@@ -16,12 +16,14 @@ import hashlib
 
 import pytest
 
-from conftest import (
+from direct_harness import (
     CLAIM_REPO,
+    CLAIM_SOURCE,
     CLAIM_THRESHOLD,
     DEADLINE,
     REWARD_ATTO,
     REGISTRY_SOURCE,
+    addr_hex,
     make_address,
 )
 
@@ -312,8 +314,6 @@ def test_embedded_child_source_still_matches_the_canonical_file():
     """
     import re
 
-    from conftest import CLAIM_SOURCE
-
     text = REGISTRY_SOURCE.read_text(encoding="utf-8")
     match = re.search(
         r"_CHILD_SOURCE_HEX = \((.*?)\)\n# --- END EMBEDDED CHILD SOURCE",
@@ -333,7 +333,6 @@ def test_embedded_child_source_still_matches_the_canonical_file():
 def test_both_contracts_pin_the_runner_by_hash_and_never_by_tag():
     """Hard requirement 1, enforced by test rather than by review."""
     import re
-    from conftest import CLAIM_SOURCE
 
     pattern = re.compile(
         r'^# \{ "Depends": "py-genlayer:(?P<ref>[0-9a-z]{40,})" \}$'
@@ -359,8 +358,6 @@ def test_neither_contract_uses_a_banned_pattern():
     """
     import re
 
-    from conftest import CLAIM_SOURCE
-
     banned = {
         "enum import": r"^\s*(from|import)\s+\S*enum",
         "enum in storage": r"\bEnum\b\s*[(.:]",
@@ -379,8 +376,6 @@ def test_neither_contract_uses_a_banned_pattern():
 
 def addr_of(vm) -> str:
     """Checksum hex of the address the registry itself is deployed at."""
-    from conftest import addr_hex
-
     return addr_hex(bytes(vm._contract_address))
 
 

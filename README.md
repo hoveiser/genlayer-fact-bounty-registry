@@ -45,6 +45,8 @@ contracts/
 tests/
   direct/              51 Direct Mode tests (real pinned runner, in-process, no consensus)
   integration/         13 live studionet tests (real leader + 5 validators)
+                       shared helpers live in direct_harness.py / netconfig.py,
+                       not in conftest.py — see note 21 below
 scripts/
   build_bundle.py            regenerates the embedded child source inside BountyRegistry.py
   e2e_studionet.py           drives a full bounty lifecycle against the deployed registry
@@ -646,7 +648,7 @@ send <to> <amount>` exits 0, prints nothing and moves no GEN. Value-bearing
     `--timeout` is an unknown option.
 20. **Line endings are part of the deployed artifact, and Python's default
     newline translation edits them silently.** The child source is embedded as
-    *bytes*, and `Path.write_text(...)` on Windows turns every `\n` into `\r\n`
+    _bytes_, and `Path.write_text(...)` on Windows turns every `\n` into `\r\n`
     unless you pass `newline="\n"` — so re-running the bundle generator can grow
     the factory's payload by one byte per line and produce a child that is **not**
     the one that was deployed, while every transaction status still reads
@@ -655,6 +657,18 @@ send <to> <amount>` exits 0, prints nothing and moves no GEN. Value-bearing
     line-ending normalisation, and `verify_explorer_evidence.py` reports the
     byte-exact and modulo-line-endings comparisons separately instead of picking
     one and hiding the other.
+21. **`conftest.py` is not a safe place to put things tests import by name.**
+    pytest registers a non-package `conftest.py` in `sys.modules` under exactly
+    that bare name, so with two test directories (`tests/direct`,
+    `tests/integration`) a `from conftest import ...` inside a test resolves to
+    whichever conftest was collected _last_. Running `pytest -q` from the repo
+    root therefore failed 4 direct-mode tests with `ImportError: cannot import
+name 'CLAIM_SOURCE' from 'conftest' (... tests\integration\conftest.py)`,
+    while `pytest tests/direct -q` passed 51/51 — a harness bug that only
+    appeared in the exact command a reviewer is most likely to type. Fix: the
+    shared constants and helpers live in `tests/direct/direct_harness.py` and
+    `tests/integration/netconfig.py` (unique module names), and `conftest.py`
+    keeps only fixtures and hooks, which pytest resolves per directory anyway.
 
 ## Requirement checklist
 

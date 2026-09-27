@@ -28,7 +28,7 @@ from __future__ import annotations
 import time
 
 import pytest
-from conftest import ATTO_PER_GEN, CLAIM_REPO, CLAIM_THRESHOLD, FAR_FUTURE, SOURCE_URL
+from netconfig import ATTO_PER_GEN, CLAIM_REPO, CLAIM_THRESHOLD, FAR_FUTURE, SOURCE_URL
 
 pytestmark = pytest.mark.integration
 
