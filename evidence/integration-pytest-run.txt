@@ -1,0 +1,83 @@
+# Live studionet integration run -- console capture (excerpt)
+
+# Command:  py -3.12 -m pytest tests/integration -m integration -v -s
+# Registry: 0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012  (network: studionet, chainId 61999)
+# Result:   13 passed
+
+# The first lines of the original capture were PowerShell rendering the plugin's
+# stderr INFO banner as error records; they are dropped. Everything below is the
+# pytest output verbatim. The bounty/child ledger at the end is independently
+# re-derived from the chain and the explorer by
+#   scripts/collect_integration_evidence.py -> evidence/integration-evidence.json
+#   scripts/verify_explorer_evidence.py     -> evidence/explorer-verification-integration.json
+
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Reich3\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Reich3\project\BountyRegistry
+configfile: pytest.ini
+plugins: genlayer-test-0.29.2
+collecting ... collected 13 items
+
+tests/integration/test_studionet_factcheck.py::TestPayableAndEscrow::test_value_bearing_create_bounty_finalizes   [create_bounty it-465605650] PENDING
+  [create_bounty it-465605650] ACCEPTED
+  [create_bounty it-465605650] FINALIZED
+PASSED
+tests/integration/test_studionet_factcheck.py::TestPayableAndEscrow::test_locked_reward_becomes_the_child_escrow PASSED
+tests/integration/test_studionet_factcheck.py::TestPayableAndEscrow::test_a_call_that_locks_nothing_is_refused   [create_bounty value=0] COMMITTING
+  [create_bounty value=0] ACCEPTED
+  [create_bounty value=0] FINALIZED
+PASSED
+tests/integration/test_studionet_factcheck.py::TestDerivedVerdictConsensus::test_correct_report_settles_paid   [create_bounty it-465691969] PROPOSING
+  [create_bounty it-465691969] ACCEPTED
+  [create_bounty it-465691969] FINALIZED
+  [submit_report 0x50F75080da59f7a718545e84234fE0d83a7a9673] PENDING
+  [submit_report 0x50F75080da59f7a718545e84234fE0d83a7a9673] ACCEPTED
+  [submit_report 0x50F75080da59f7a718545e84234fE0d83a7a9673] FINALIZED
+  [verify 0x50F75080da59f7a718545e84234fE0d83a7a9673] PROPOSING
+  [verify 0x50F75080da59f7a718545e84234fE0d83a7a9673] ACCEPTED
+  [verify 0x50F75080da59f7a718545e84234fE0d83a7a9673] FINALIZED
+  [payout transfer] FINALIZED
+PASSED
+tests/integration/test_studionet_factcheck.py::TestDerivedVerdictConsensus::test_validators_actually_ran_and_agreed PASSED
+tests/integration/test_studionet_factcheck.py::TestDerivedVerdictConsensus::test_derived_fact_check_is_recorded_not_raw_page PASSED
+tests/integration/test_studionet_factcheck.py::TestDerivedVerdictConsensus::test_payout_moves_the_escrow PASSED
+tests/integration/test_studionet_factcheck.py::TestDerivedVerdictConsensus::test_wrong_report_is_rejected_without_payout   [create_bounty it-465825012] PENDING
+  [create_bounty it-465825012] ACCEPTED
+  [create_bounty it-465825012] FINALIZED
+  [submit_report FALSE 0xa48a4366bDD4787dbEf2b6075e82E246BFf00499] PROPOSING
+  [submit_report FALSE 0xa48a4366bDD4787dbEf2b6075e82E246BFf00499] ACCEPTED
+  [submit_report FALSE 0xa48a4366bDD4787dbEf2b6075e82E246BFf00499] FINALIZED
+  [verify FALSE 0xa48a4366bDD4787dbEf2b6075e82E246BFf00499] PENDING
+  [verify FALSE 0xa48a4366bDD4787dbEf2b6075e82E246BFf00499] COMMITTING
+  [verify FALSE 0xa48a4366bDD4787dbEf2b6075e82E246BFf00499] ACCEPTED
+  [verify FALSE 0xa48a4366bDD4787dbEf2b6075e82E246BFf00499] FINALIZED
+PASSED
+tests/integration/test_studionet_factcheck.py::TestDerivedVerdictConsensus::test_absent_repository_yields_a_verdict_not_a_hang   [create_bounty it-465960907] PROPOSING
+  [create_bounty it-465960907] ACCEPTED
+  [create_bounty it-465960907] FINALIZED
+  [submit_report 404 0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF] PENDING
+  [submit_report 404 0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF] ACCEPTED
+  [submit_report 404 0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF] FINALIZED
+  [verify 404 0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF] PROPOSING
+  [verify 404 0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF] ACCEPTED
+  [verify 404 0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF] FINALIZED
+PASSED
+tests/integration/test_studionet_factcheck.py::TestAuthorizationAndAggregation::test_poster_cannot_report_its_own_bounty   [poster self-report] PROPOSING
+  [poster self-report] ACCEPTED
+  [poster self-report] FINALIZED
+PASSED
+tests/integration/test_studionet_factcheck.py::TestAuthorizationAndAggregation::test_only_the_poster_may_reclaim   [non-poster reclaim attempt] PENDING
+  [non-poster reclaim attempt] ACCEPTED
+  [non-poster reclaim attempt] FINALIZED
+PASSED
+tests/integration/test_studionet_factcheck.py::TestAuthorizationAndAggregation::test_registry_aggregates_by_reading_children PASSED
+tests/integration/test_studionet_factcheck.py::TestAuthorizationAndAggregation::test_unknown_bounty_id_is_not_silently_empty PASSED
+[integration] bounty txs created by this run:
+  it-465605650 create=0x84a783a7707b6c29012dedccc0ac1096557c13895afc4fa4b34111c2fa9fb190 child=0x412829AA72fd44851adE05C1D77d719AcA74B1dD
+  it-465691969 create=0x84be800b44b9475b7e6f7a216eef15a92f1f60d324b2f05834e04611c08a3d99 child=0x50F75080da59f7a718545e84234fE0d83a7a9673
+  it-465825012 create=0x5384474726609e65a76bc4c5d9f6561916e1e1f27feb5b6dd9c7e860a543f908 child=0xa48a4366bDD4787dbEf2b6075e82E246BFf00499
+  it-465960907 create=0xf1b98140945a9e819246d2dc8c4a0b9b2d14a7346be4696d015f0cfdfe7c2789 child=0xa36cd793125f1856D538e0C2da6c22C1E01A1aBF
+
+
+======================= 13 passed in 601.22s (0:10:01) ========================

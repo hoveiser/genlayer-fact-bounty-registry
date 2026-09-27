@@ -1,0 +1,162 @@
+{
+  "explorer_base": "https://explorer-studio.genlayer.com",
+  "transactions": [
+    {
+      "tx_hash": "0xf0e78acc4b80ec496e225826e6686a7d7748be81320fa7b63612bf40b76705ff",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0xf0e78acc4b80ec496e225826e6686a7d7748be81320fa7b63612bf40b76705ff",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "to_address": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "value": 1000000000000000000,
+      "created_at": "2026-09-26T23:27:08.862498+00:00",
+      "num_of_initial_validators": 5,
+      "result": null
+    },
+    {
+      "tx_hash": "0x00731b0dcb209465dc1c77fd5e0ad2f04e85fb498685a60efe793c08aa0c4cbf",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0x00731b0dcb209465dc1c77fd5e0ad2f04e85fb498685a60efe793c08aa0c4cbf",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+      "to_address": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "value": 0,
+      "created_at": "2026-09-26T23:27:57.818817+00:00",
+      "num_of_initial_validators": 5,
+      "result": null
+    },
+    {
+      "tx_hash": "0xc6f3a2477ae9a84982c43c7d80f71b1fb74149f189ffc66543e04f7b5088a477",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0xc6f3a2477ae9a84982c43c7d80f71b1fb74149f189ffc66543e04f7b5088a477",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "to_address": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "value": 0,
+      "created_at": "2026-09-26T23:28:43.255128+00:00",
+      "num_of_initial_validators": 5,
+      "result": null
+    },
+    {
+      "tx_hash": "0x8da1ea3fcd3e947d8911124254357166da3b3b80161023a7ff2000a9399323e1",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0x8da1ea3fcd3e947d8911124254357166da3b3b80161023a7ff2000a9399323e1",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "to_address": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "value": 500000000000000000,
+      "created_at": "2026-09-26T23:29:27.830415+00:00",
+      "num_of_initial_validators": 5,
+      "result": null
+    },
+    {
+      "tx_hash": "0x2416f4c9facf0cc92f61aa1e01f48f3573d8b802f2121320e4c7741345151bb1",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0x2416f4c9facf0cc92f61aa1e01f48f3573d8b802f2121320e4c7741345151bb1",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "to_address": "0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+      "value": 0,
+      "created_at": "2026-09-26T23:30:12.722833+00:00",
+      "num_of_initial_validators": 5,
+      "result": null
+    },
+    {
+      "tx_hash": "0x6a8941402e66509cf84bcc1470a4fe28869e195659f885899b317e425c8fbb8b",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0x6a8941402e66509cf84bcc1470a4fe28869e195659f885899b317e425c8fbb8b",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "to_address": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "value": 1000000000000000000,
+      "created_at": "2026-09-26T23:27:45.800047+00:00",
+      "num_of_initial_validators": null,
+      "result": null
+    },
+    {
+      "tx_hash": "0xec27b732b060972fccf2b9ae8af3f15689f8cfde0ad0fc34b4bc69a4be90f06b",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0xec27b732b060972fccf2b9ae8af3f15689f8cfde0ad0fc34b4bc69a4be90f06b",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "to_address": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+      "value": 1000000000000000000,
+      "created_at": "2026-09-26T23:29:19.418297+00:00",
+      "num_of_initial_validators": null,
+      "result": null
+    },
+    {
+      "tx_hash": "0xeab3ff8b7ee9ef458062b62d5e4fb90f1f088ed4502735010d9f8fce25423a20",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0xeab3ff8b7ee9ef458062b62d5e4fb90f1f088ed4502735010d9f8fce25423a20",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "to_address": "0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+      "value": 500000000000000000,
+      "created_at": "2026-09-26T23:30:03.636971+00:00",
+      "num_of_initial_validators": null,
+      "result": null
+    },
+    {
+      "tx_hash": "0x256c8da0056af8b4a4f45fa2d1bd38225620a6e8c0cc90de7c10e93779a896ac",
+      "explorer_url": "https://explorer-studio.genlayer.com/tx/0x256c8da0056af8b4a4f45fa2d1bd38225620a6e8c0cc90de7c10e93779a896ac",
+      "found": true,
+      "status": "FINALIZED",
+      "from_address": "0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+      "to_address": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "value": 500000000000000000,
+      "created_at": "2026-09-26T23:30:45.408599+00:00",
+      "num_of_initial_validators": null,
+      "result": null
+    }
+  ],
+  "addresses": [
+    {
+      "role": "registry",
+      "address": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "explorer_url": "https://explorer-studio.genlayer.com/address/0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "explorer_type": "CONTRACT",
+      "tx_count": 18,
+      "deployed_source_first_line": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
+      "deployed_runner_pin": "1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+      "deployed_source_pin_is_content_hash": true,
+      "creator": null,
+      "pin_header_present_on_chain": true,
+      "required_pin_seen": true,
+      "local_source_file": "C:\\Users\\Reich3\\project\\BountyRegistry\\contracts\\BountyRegistry.py",
+      "deployed_source_equals_local_bytes": true,
+      "deployed_source_equals_local_modulo_line_endings": true
+    },
+    {
+      "role": "child_A",
+      "address": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "explorer_url": "https://explorer-studio.genlayer.com/address/0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "explorer_type": "CONTRACT",
+      "tx_count": 4,
+      "deployed_source_first_line": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
+      "deployed_runner_pin": "1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+      "deployed_source_pin_is_content_hash": true,
+      "creator": null,
+      "pin_header_present_on_chain": true,
+      "local_source_file": "C:\\Users\\Reich3\\project\\BountyRegistry\\contracts\\BountyClaim.py",
+      "deployed_source_equals_local_bytes": true,
+      "deployed_source_equals_local_modulo_line_endings": true
+    },
+    {
+      "role": "child_B",
+      "address": "0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+      "explorer_url": "https://explorer-studio.genlayer.com/address/0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+      "explorer_type": "CONTRACT",
+      "tx_count": 3,
+      "deployed_source_first_line": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
+      "deployed_runner_pin": "1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+      "deployed_source_pin_is_content_hash": true,
+      "creator": null,
+      "pin_header_present_on_chain": true,
+      "local_source_file": "C:\\Users\\Reich3\\project\\BountyRegistry\\contracts\\BountyClaim.py",
+      "deployed_source_equals_local_bytes": true,
+      "deployed_source_equals_local_modulo_line_endings": true
+    }
+  ],
+  "problems": []
+}

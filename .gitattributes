@@ -1,0 +1,19 @@
+# The factory embeds `contracts/BountyClaim.py` byte-for-byte into
+# `contracts/BountyRegistry.py`, and what studionet stores for the registry and
+# for every deployed child is exactly those bytes (CRLF included -- the bundle
+# was built on Windows). Normalising line endings on commit/checkout would change
+# the embedded payload, break `scripts/build_bundle.py --check`, and break the
+# byte-exact "the chain stores this file" check in
+# `scripts/verify_explorer_evidence.py`. So these files are stored verbatim.
+*.py -text
+*.pyc binary
+
+# Evidence is machine-generated output; compare it byte-for-byte, never rewrite it.
+evidence/*.json -text
+evidence/*.txt -text
+
+# Docs are safe to normalise.
+*.md text eol=lf
+*.yaml text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf

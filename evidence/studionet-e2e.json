@@ -1,0 +1,511 @@
+{
+  "network": {
+    "name": "studionet",
+    "chain_id": 61999,
+    "rpc": "https://studio.genlayer.com/api"
+  },
+  "explorer_base": "https://explorer-studio.genlayer.com",
+  "registry": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+  "poster": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+  "reporter": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+  "claim": {
+    "repo": "genlayerlabs/skills",
+    "threshold": 10,
+    "source_url": "https://api.github.com/repos/genlayerlabs/skills",
+    "report_submitted": "TRUE"
+  },
+  "transactions": [
+    {
+      "step": "create_bounty_A",
+      "tx_hash": "0xf0e78acc4b80ec496e225826e6686a7d7748be81320fa7b63612bf40b76705ff",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 18,
+      "created_at": "2026-09-26T23:27:08.862498+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "value_atto": 1000000000000000000,
+      "value_credited": true,
+      "gaslimit": 18,
+      "messages": [
+        {
+          "recipient": null,
+          "value_atto": 1000000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11": "agree",
+        "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d": "agree",
+        "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE": "agree",
+        "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8": "agree",
+        "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658",
+          "model": "policy:prd-deepseek",
+          "result": "return",
+          "readable_payload": "addr#2f9f9bf9edb0054d3a45da31aee51dce27ce0717"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658",
+          "model": "policy:prd-deepseek",
+          "result": "return",
+          "readable_payload": "addr#2f9f9bf9edb0054d3a45da31aee51dce27ce0717"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11",
+          "model": "google/gemini-3-flash-preview",
+          "result": "ABgvn5v57bAFTTpF2jGu5R3OJ84HFw==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE",
+          "model": "openai/gpt-5.4",
+          "result": "ABgvn5v57bAFTTpF2jGu5R3OJ84HFw==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d",
+          "model": "policy:prd-glm",
+          "result": "ABgvn5v57bAFTTpF2jGu5R3OJ84HFw==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8",
+          "model": "policy:prd-sonnet",
+          "result": "ABgvn5v57bAFTTpF2jGu5R3OJ84HFw==",
+          "readable_payload": null
+        }
+      ],
+      "triggered_tx_ids": [
+        "0x6a8941402e66509cf84bcc1470a4fe28869e195659f885899b317e425c8fbb8b"
+      ]
+    },
+    {
+      "step": "submit_report_A",
+      "tx_hash": "0x00731b0dcb209465dc1c77fd5e0ad2f04e85fb498685a60efe793c08aa0c4cbf",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 3,
+      "created_at": "2026-09-26T23:27:57.818817+00:00",
+      "sender": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+      "recipient": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "value_atto": 0,
+      "value_credited": false,
+      "gaslimit": 3,
+      "messages": [],
+      "votes": {
+        "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC": "agree",
+        "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2": "agree",
+        "0x90402341F0B0e97b23023c0a87de957FB7148E0F": "agree",
+        "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d": "agree",
+        "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d",
+          "model": "policy:prd-glm",
+          "result": "return",
+          "readable_payload": "\"TRUE\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d",
+          "model": "policy:prd-glm",
+          "result": "return",
+          "readable_payload": "\"TRUE\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC",
+          "model": "policy:prd-gpt-oss",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x90402341F0B0e97b23023c0a87de957FB7148E0F",
+          "model": "policy:prd-gemini",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658",
+          "model": "policy:prd-deepseek",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2",
+          "model": "policy:prd-kimi",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        }
+      ]
+    },
+    {
+      "step": "verify_A",
+      "tx_hash": "0xc6f3a2477ae9a84982c43c7d80f71b1fb74149f189ffc66543e04f7b5088a477",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 19,
+      "created_at": "2026-09-26T23:28:43.255128+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+      "value_atto": 0,
+      "value_credited": false,
+      "gaslimit": 19,
+      "messages": [
+        {
+          "recipient": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+          "value_atto": 1000000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11": "agree",
+        "0x36728d2a123aB444E603EE5b2ad17d18Bb193557": "agree",
+        "0x76c25AFC12c75485703cCFfd0083AA6201455B25": "idle",
+        "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d": "idle",
+        "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d",
+          "model": "policy:prd-glm",
+          "result": "return",
+          "readable_payload": "\"PAID\""
+        },
+        {
+          "mode": "validator",
+          "vote": "idle",
+          "execution_result": "ERROR",
+          "node": "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d",
+          "model": null,
+          "result": "contract_error",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x36728d2a123aB444E603EE5b2ad17d18Bb193557",
+          "model": "policy:prd-grok",
+          "result": "ACRQQUlE",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE",
+          "model": "openai/gpt-5.4",
+          "result": "ACRQQUlE",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "idle",
+          "execution_result": "ERROR",
+          "node": "0x76c25AFC12c75485703cCFfd0083AA6201455B25",
+          "model": null,
+          "result": "AmlkbGU=",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11",
+          "model": "google/gemini-3-flash-preview",
+          "result": "ACRQQUlE",
+          "readable_payload": null
+        }
+      ],
+      "readable_result": null
+    },
+    {
+      "step": "create_bounty_B",
+      "tx_hash": "0x8da1ea3fcd3e947d8911124254357166da3b3b80161023a7ff2000a9399323e1",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 20,
+      "created_at": "2026-09-26T23:29:27.830415+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0x116DE8851D2101D583b84EBFEEadc9d2f10Ae012",
+      "value_atto": 500000000000000000,
+      "value_credited": true,
+      "gaslimit": 20,
+      "messages": [
+        {
+          "recipient": null,
+          "value_atto": 500000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x36728d2a123aB444E603EE5b2ad17d18Bb193557": "agree",
+        "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE": "agree",
+        "0xDB1c35c1f05d885999b8f13e5735307BcC16Be88": "agree",
+        "0xacc2459F341D7a887bcA8FAA62F1EC9378d4Bc67": "agree",
+        "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x36728d2a123aB444E603EE5b2ad17d18Bb193557",
+          "model": "policy:prd-grok",
+          "result": "return",
+          "readable_payload": "addr#8f366497e7d5c14a144d0ae782850d568ff7df15"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x36728d2a123aB444E603EE5b2ad17d18Bb193557",
+          "model": "policy:prd-grok",
+          "result": "return",
+          "readable_payload": "addr#8f366497e7d5c14a144d0ae782850d568ff7df15"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xDB1c35c1f05d885999b8f13e5735307BcC16Be88",
+          "model": "openai/gpt-5.4",
+          "result": "ABiPNmSX59XBShRNCueChQ1Wj/ffFQ==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658",
+          "model": "policy:prd-deepseek",
+          "result": "ABiPNmSX59XBShRNCueChQ1Wj/ffFQ==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE",
+          "model": "openai/gpt-5.4",
+          "result": "ABiPNmSX59XBShRNCueChQ1Wj/ffFQ==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xacc2459F341D7a887bcA8FAA62F1EC9378d4Bc67",
+          "model": "policy:prd-sonnet",
+          "result": "ABiPNmSX59XBShRNCueChQ1Wj/ffFQ==",
+          "readable_payload": null
+        }
+      ]
+    },
+    {
+      "step": "reclaim_after_timeout_B",
+      "tx_hash": "0x2416f4c9facf0cc92f61aa1e01f48f3573d8b802f2121320e4c7741345151bb1",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 21,
+      "created_at": "2026-09-26T23:30:12.722833+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+      "value_atto": 0,
+      "value_credited": false,
+      "gaslimit": 21,
+      "messages": [
+        {
+          "recipient": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+          "value_atto": 500000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC": "agree",
+        "0x76c25AFC12c75485703cCFfd0083AA6201455B25": "agree",
+        "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84": "agree",
+        "0xDB1c35c1f05d885999b8f13e5735307BcC16Be88": "agree",
+        "0xE6BD8050758CB15fC88387223E31Ae2708B119dC": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84",
+          "model": "policy:prd-gpt-5-4",
+          "result": "return",
+          "readable_payload": "\"REFUNDED\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84",
+          "model": "policy:prd-gpt-5-4",
+          "result": "return",
+          "readable_payload": "\"REFUNDED\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC",
+          "model": "policy:prd-gpt-oss",
+          "result": "AERSRUZVTkRFRA==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x76c25AFC12c75485703cCFfd0083AA6201455B25",
+          "model": "policy:prd-mistral",
+          "result": "AERSRUZVTkRFRA==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xE6BD8050758CB15fC88387223E31Ae2708B119dC",
+          "model": "policy:prd-minimax",
+          "result": "AERSRUZVTkRFRA==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xDB1c35c1f05d885999b8f13e5735307BcC16Be88",
+          "model": "openai/gpt-5.4",
+          "result": "AERSRUZVTkRFRA==",
+          "readable_payload": null
+        }
+      ]
+    }
+  ],
+  "bounties_before": 2,
+  "child_A": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+  "reporter_balance_before_atto": 2000000000000000000,
+  "status_A": {
+    "bounty_id": "skills-ge-10-1790465224",
+    "claim": "genlayerlabs/skills",
+    "created_at": "2026-09-26T23:27:45",
+    "deadline_at": "2099-12-31T23:59:59",
+    "escrow_atto": 0,
+    "evidence": "https://api.github.com/repos/genlayerlabs/skills stargazers_count >= 10",
+    "fact_check_met": true,
+    "fact_check_reachable": true,
+    "fact_check_repo_ok": true,
+    "poster": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+    "reported_verdict": "TRUE",
+    "reporter": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+    "reward_atto": 1000000000000000000,
+    "source_url": "https://api.github.com/repos/genlayerlabs/skills",
+    "status": "PAID",
+    "threshold": 10,
+    "truth_verdict": "TRUE"
+  },
+  "reporter_balance_atto": 3000000000000000000,
+  "child_B": "0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+  "status_B": {
+    "bounty_id": "timeout-1790465224",
+    "claim": "genlayerlabs/skills",
+    "created_at": "2026-09-26T23:30:03",
+    "deadline_at": "2020-01-01T00:00:00",
+    "escrow_atto": 0,
+    "evidence": "",
+    "fact_check_met": false,
+    "fact_check_reachable": false,
+    "fact_check_repo_ok": false,
+    "poster": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+    "reported_verdict": "",
+    "reporter": "",
+    "reward_atto": 500000000000000000,
+    "source_url": "https://api.github.com/repos/genlayerlabs/skills",
+    "status": "REFUNDED",
+    "threshold": 10,
+    "truth_verdict": ""
+  },
+  "aggregate": {
+    "by_status": {
+      "OPEN": 1,
+      "PAID": 2,
+      "REFUNDED": 1
+    },
+    "escrow_total_atto": 500000000000000000,
+    "children": []
+  },
+  "list_bounties": {
+    "count": 4,
+    "total_created": 4,
+    "bounties": [
+      {
+        "address": "0x9Deaa63847AB9C434bFEa42A9Cec1752870b229F",
+        "bounty_id": "skills-ge-10-1790465018"
+      },
+      {
+        "address": "0x9Ace830E7FE4a1768ff136Ab1126206160b0F1Db",
+        "bounty_id": "timeout-1790465018"
+      },
+      {
+        "address": "0x2f9F9bF9EDB0054d3a45Da31aEE51DcE27cE0717",
+        "bounty_id": "skills-ge-10-1790465224"
+      },
+      {
+        "address": "0x8f366497E7D5C14a144d0AE782850D568fF7DF15",
+        "bounty_id": "timeout-1790465224"
+      }
+    ]
+  }
+}

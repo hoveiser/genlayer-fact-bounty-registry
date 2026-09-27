@@ -1,0 +1,514 @@
+{
+  "network": {
+    "name": "studionet",
+    "chain_id": 61999,
+    "rpc": "https://studio.genlayer.com/api"
+  },
+  "explorer_base": "https://explorer-studio.genlayer.com",
+  "registry": "0x6B1915E4eA3D2e047351517BBCB19ff56e32fE81",
+  "poster": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+  "reporter": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+  "claim": {
+    "repo": "genlayerlabs/skills",
+    "threshold": 10,
+    "source_url": "https://api.github.com/repos/genlayerlabs/skills",
+    "report_submitted": "TRUE"
+  },
+  "transactions": [
+    {
+      "step": "create_bounty_A",
+      "tx_hash": "0x10f080cc1a4840aa8aa38d36d4e8167c96d624c4d4af72066301bd5c31b25bc4",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 10,
+      "created_at": "2026-09-26T22:53:08.500607+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0x6B1915E4eA3D2e047351517BBCB19ff56e32fE81",
+      "value_atto": 1000000000000000000,
+      "value_credited": true,
+      "gaslimit": 10,
+      "messages": [
+        {
+          "recipient": null,
+          "value_atto": 1000000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x3D83ab507785b95ca5C208bEc80CCe3D5ca98100": "agree",
+        "0x4404Fb70d490c935758146f42A73DC850FF95C71": "agree",
+        "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2": "agree",
+        "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE": "agree",
+        "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x4404Fb70d490c935758146f42A73DC850FF95C71",
+          "model": "policy:prd-gemma",
+          "result": "return",
+          "readable_payload": "addr#c7c94c43e00513edbd446582a64779af884deb3a"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x4404Fb70d490c935758146f42A73DC850FF95C71",
+          "model": "policy:prd-gemma",
+          "result": "return",
+          "readable_payload": "addr#c7c94c43e00513edbd446582a64779af884deb3a"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8",
+          "model": "policy:prd-sonnet",
+          "result": "ABjHyUxD4AUT7b1EZYKmR3mviE3rOg==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2",
+          "model": "policy:prd-kimi",
+          "result": "ABjHyUxD4AUT7b1EZYKmR3mviE3rOg==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE",
+          "model": "openai/gpt-5.4",
+          "result": "ABjHyUxD4AUT7b1EZYKmR3mviE3rOg==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x3D83ab507785b95ca5C208bEc80CCe3D5ca98100",
+          "model": "policy:prd-gpt-5-4",
+          "result": "ABjHyUxD4AUT7b1EZYKmR3mviE3rOg==",
+          "readable_payload": null
+        }
+      ],
+      "triggered_tx_ids": [
+        "0x41881b4809f2d58041562e26aad502c0758c395d04d4e37d3b8480018af4389b"
+      ]
+    },
+    {
+      "step": "submit_report_A",
+      "tx_hash": "0x5e1225ab101808be997a1dd09f8466292d345c45c2108d77d7c3ebce1a744528",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 1,
+      "created_at": "2026-09-26T22:53:54.750547+00:00",
+      "sender": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+      "recipient": "0xC7C94C43E00513edBD446582a64779af884Deb3a",
+      "value_atto": 0,
+      "value_credited": false,
+      "gaslimit": 1,
+      "messages": [],
+      "votes": {
+        "0x36728d2a123aB444E603EE5b2ad17d18Bb193557": "agree",
+        "0x6737ca1d6BDF8b7C4f19143E2D55581Ca64eb7C3": "agree",
+        "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84": "agree",
+        "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE": "agree",
+        "0xE6BD8050758CB15fC88387223E31Ae2708B119dC": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84",
+          "model": "policy:prd-gpt-5-4",
+          "result": "return",
+          "readable_payload": "\"TRUE\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84",
+          "model": "policy:prd-gpt-5-4",
+          "result": "return",
+          "readable_payload": "\"TRUE\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xE6BD8050758CB15fC88387223E31Ae2708B119dC",
+          "model": "policy:prd-minimax",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x6737ca1d6BDF8b7C4f19143E2D55581Ca64eb7C3",
+          "model": "policy:prd-qwen",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x36728d2a123aB444E603EE5b2ad17d18Bb193557",
+          "model": "policy:prd-grok",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE",
+          "model": "openai/gpt-5.4",
+          "result": "ACRUUlVF",
+          "readable_payload": null
+        }
+      ]
+    },
+    {
+      "step": "verify_A",
+      "tx_hash": "0x7de70b8540026edff67e761e320ed7b52c380475cbf07ef6ea4c88776701ba58",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 11,
+      "created_at": "2026-09-26T22:54:38.027345+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0xC7C94C43E00513edBD446582a64779af884Deb3a",
+      "value_atto": 0,
+      "value_credited": false,
+      "gaslimit": 11,
+      "messages": [
+        {
+          "recipient": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+          "value_atto": 1000000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11": "idle",
+        "0x3D83ab507785b95ca5C208bEc80CCe3D5ca98100": "agree",
+        "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC": "agree",
+        "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84": "agree",
+        "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d": "idle"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC",
+          "model": "policy:prd-gpt-oss",
+          "result": "return",
+          "readable_payload": "\"PAID\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC",
+          "model": "policy:prd-gpt-oss",
+          "result": "return",
+          "readable_payload": "\"PAID\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x3D83ab507785b95ca5C208bEc80CCe3D5ca98100",
+          "model": "policy:prd-gpt-5-4",
+          "result": "ACRQQUlE",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "idle",
+          "execution_result": "ERROR",
+          "node": "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d",
+          "model": null,
+          "result": "AmlkbGU=",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "idle",
+          "execution_result": "ERROR",
+          "node": "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11",
+          "model": null,
+          "result": "AmlkbGU=",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84",
+          "model": "policy:prd-gpt-5-4",
+          "result": "ACRQQUlE",
+          "readable_payload": null
+        }
+      ],
+      "readable_result": "{\"method\":\"verify\"}"
+    },
+    {
+      "step": "create_bounty_B",
+      "tx_hash": "0x50a90c56648c9535b2447d96fff3c1fbed486ba7de272970ae775768069c427d",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 12,
+      "created_at": "2026-09-26T22:55:27.943942+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0x6B1915E4eA3D2e047351517BBCB19ff56e32fE81",
+      "value_atto": 500000000000000000,
+      "value_credited": true,
+      "gaslimit": 12,
+      "messages": [
+        {
+          "recipient": null,
+          "value_atto": 500000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11": "agree",
+        "0x3E5ee2507cc167C9925Bf10c67D7986581112024": "agree",
+        "0x4EDbE1FC9EAeC7b0EBA849b0C76AE73Eb0ad5C47": "agree",
+        "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC": "agree",
+        "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0x4EDbE1FC9EAeC7b0EBA849b0C76AE73Eb0ad5C47",
+          "model": "policy:prd-gpt-5-4",
+          "result": "return",
+          "readable_payload": "addr#6650b7792da4a0c0d91b763b14c5f44090e047fa"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x4EDbE1FC9EAeC7b0EBA849b0C76AE73Eb0ad5C47",
+          "model": "policy:prd-gpt-5-4",
+          "result": "return",
+          "readable_payload": "addr#6650b7792da4a0c0d91b763b14c5f44090e047fa"
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x03D58A4DeF6fDFc032A56374785a5F571D07Bc11",
+          "model": "google/gemini-3-flash-preview",
+          "result": "ABhmULd5LaSgwNkbdjsUxfRAkOBH+g==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC",
+          "model": "policy:prd-gpt-oss",
+          "result": "ABhmULd5LaSgwNkbdjsUxfRAkOBH+g==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658",
+          "model": "policy:prd-deepseek",
+          "result": "ABhmULd5LaSgwNkbdjsUxfRAkOBH+g==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x3E5ee2507cc167C9925Bf10c67D7986581112024",
+          "model": "policy:prd-gemini",
+          "result": "ABhmULd5LaSgwNkbdjsUxfRAkOBH+g==",
+          "readable_payload": null
+        }
+      ]
+    },
+    {
+      "step": "reclaim_after_timeout_B",
+      "tx_hash": "0xd2cf37f6c4a8347b9ccb902f4bb95f0ea8cb1a130f97e64b8cac870b8cfd48e8",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "num_of_rounds": "1",
+      "nonce": 13,
+      "created_at": "2026-09-26T22:56:13.500309+00:00",
+      "sender": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "recipient": "0x6650B7792Da4A0C0D91b763B14C5f44090E047FA",
+      "value_atto": 0,
+      "value_credited": false,
+      "gaslimit": 13,
+      "messages": [
+        {
+          "recipient": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+          "value_atto": 500000000000000000,
+          "type": null
+        }
+      ],
+      "votes": {
+        "0x36728d2a123aB444E603EE5b2ad17d18Bb193557": "idle",
+        "0x4EDbE1FC9EAeC7b0EBA849b0C76AE73Eb0ad5C47": "idle",
+        "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2": "agree",
+        "0x6737ca1d6BDF8b7C4f19143E2D55581Ca64eb7C3": "agree",
+        "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8": "agree"
+      },
+      "validator_executions": [
+        {
+          "mode": "leader",
+          "vote": null,
+          "execution_result": "SUCCESS",
+          "node": "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8",
+          "model": "policy:prd-sonnet",
+          "result": "return",
+          "readable_payload": "\"REFUNDED\""
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8",
+          "model": "policy:prd-sonnet",
+          "result": "return",
+          "readable_payload": "\"REFUNDED\""
+        },
+        {
+          "mode": "validator",
+          "vote": "idle",
+          "execution_result": "ERROR",
+          "node": "0x36728d2a123aB444E603EE5b2ad17d18Bb193557",
+          "model": null,
+          "result": "AmlkbGU=",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x6737ca1d6BDF8b7C4f19143E2D55581Ca64eb7C3",
+          "model": "policy:prd-qwen",
+          "result": "AERSRUZVTkRFRA==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "agree",
+          "execution_result": "SUCCESS",
+          "node": "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2",
+          "model": "policy:prd-kimi",
+          "result": "AERSRUZVTkRFRA==",
+          "readable_payload": null
+        },
+        {
+          "mode": "validator",
+          "vote": "idle",
+          "execution_result": "ERROR",
+          "node": "0x4EDbE1FC9EAeC7b0EBA849b0C76AE73Eb0ad5C47",
+          "model": null,
+          "result": "AmlkbGU=",
+          "readable_payload": null
+        }
+      ]
+    }
+  ],
+  "bounties_before": 3,
+  "child_A": "0xC7C94C43E00513edBD446582a64779af884Deb3a",
+  "status_A": {
+    "bounty_id": "skills-ge-10-1790463184",
+    "claim": "genlayerlabs/skills",
+    "created_at": "2026-09-26T22:53:42",
+    "deadline_at": "2099-12-31T23:59:59",
+    "escrow_atto": 0,
+    "evidence": "https://api.github.com/repos/genlayerlabs/skills stargazers_count >= 10",
+    "fact_check_met": true,
+    "fact_check_reachable": true,
+    "fact_check_repo_ok": true,
+    "poster": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+    "reported_verdict": "TRUE",
+    "reporter": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+    "reward_atto": 1000000000000000000,
+    "source_url": "https://api.github.com/repos/genlayerlabs/skills",
+    "status": "PAID",
+    "threshold": 10,
+    "truth_verdict": "TRUE"
+  },
+  "reporter_balance_atto": 1000000000000000000,
+  "child_B": "0x6650B7792Da4A0C0D91b763B14C5f44090E047FA",
+  "status_B": {
+    "bounty_id": "timeout-1790463184",
+    "claim": "genlayerlabs/skills",
+    "created_at": "2026-09-26T22:56:02",
+    "deadline_at": "2020-01-01T00:00:00",
+    "escrow_atto": 0,
+    "evidence": "",
+    "fact_check_met": false,
+    "fact_check_reachable": false,
+    "fact_check_repo_ok": false,
+    "poster": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+    "reported_verdict": "",
+    "reporter": "",
+    "reward_atto": 500000000000000000,
+    "source_url": "https://api.github.com/repos/genlayerlabs/skills",
+    "status": "REFUNDED",
+    "threshold": 10,
+    "truth_verdict": ""
+  },
+  "aggregate": {
+    "by_status": {
+      "OPEN": 2,
+      "PAID": 2,
+      "REFUNDED": 1
+    },
+    "escrow_total_atto": 1500000000000000000,
+    "children": []
+  },
+  "list_bounties": {
+    "count": 5,
+    "total_created": 5,
+    "bounties": [
+      {
+        "address": "0xC18F68902D505ad8c3040c6B0dcF0ac3DF3B1aD7",
+        "bounty_id": "skills-ge-10-1790462505"
+      },
+      {
+        "address": "0x428037293e120835A73a5B6507275B4659F190a6",
+        "bounty_id": "skills-ge-10-1790462734"
+      },
+      {
+        "address": "0xb52A34EE242251181e250eEBCec08BF7f7f3221E",
+        "bounty_id": "timeout-1790462734"
+      },
+      {
+        "address": "0xC7C94C43E00513edBD446582a64779af884Deb3a",
+        "bounty_id": "skills-ge-10-1790463184"
+      },
+      {
+        "address": "0x6650B7792Da4A0C0D91b763B14C5f44090E047FA",
+        "bounty_id": "timeout-1790463184"
+      }
+    ]
+  }
+}

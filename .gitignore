@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.pyright-cache/
+
+# Secrets -- never commit
+.env
+.env.*
+*.key
+keystore.json
+# throwaway studionet reporter EOA key created by scripts/e2e_studionet.py
+.reporter_key
+
+# GenLayer / tooling caches
+.gltest_cache/
+gltest.config.local.yaml
+# created and wiped by the gltest pytest plugin on every run
+artifacts/
+
+# Packaging leftovers
+build/
+dist/
+*.egg-link
+.coverage
+htmlcov/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Scratch command output (never a deliverable)
+*_out.txt
+*.log
+# console captures taken at the repo root while driving the network
+/*.txt

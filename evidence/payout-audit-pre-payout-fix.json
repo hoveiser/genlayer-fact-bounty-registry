@@ -1,0 +1,138 @@
+{
+  "transactions": [
+    {
+      "step": "create_bounty_A",
+      "tx_hash": "0x10f080cc1a4840aa8aa38d36d4e8167c96d624c4d4af72066301bd5c31b25bc4",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "value": 1000000000000000000,
+      "value_credited": true,
+      "emitted_messages": 1,
+      "triggered_transactions": [
+        "0x41881b4809f2d58041562e26aad502c0758c395d04d4e37d3b8480018af4389b"
+      ]
+    },
+    {
+      "step": "submit_report_A",
+      "tx_hash": "0x5e1225ab101808be997a1dd09f8466292d345c45c2108d77d7c3ebce1a744528",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "value": 0,
+      "value_credited": false,
+      "emitted_messages": 0,
+      "triggered_transactions": []
+    },
+    {
+      "step": "verify_A",
+      "tx_hash": "0x7de70b8540026edff67e761e320ed7b52c380475cbf07ef6ea4c88776701ba58",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "value": 0,
+      "value_credited": false,
+      "emitted_messages": 1,
+      "triggered_transactions": [
+        "0x58b516d2650901f54819c190ab99a6807525e451d52d013cf6b91904a1f81dce"
+      ]
+    },
+    {
+      "step": "create_bounty_B",
+      "tx_hash": "0x50a90c56648c9535b2447d96fff3c1fbed486ba7de272970ae775768069c427d",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "value": 500000000000000000,
+      "value_credited": true,
+      "emitted_messages": 1,
+      "triggered_transactions": [
+        "0xad2a83d1d066688a1ac9c8ec6090daf9f975065cb96e0078de25087107a4ab0a"
+      ]
+    },
+    {
+      "step": "reclaim_after_timeout_B",
+      "tx_hash": "0xd2cf37f6c4a8347b9ccb902f4bb95f0ea8cb1a130f97e64b8cac870b8cfd48e8",
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "value": 0,
+      "value_credited": false,
+      "emitted_messages": 1,
+      "triggered_transactions": [
+        "0xb81612f8d8ef5de9e4d416569818703d4fb2819acac1bbbd867b6af8bf8687b0"
+      ]
+    }
+  ],
+  "triggered": [
+    {
+      "parent_step": "create_bounty_A",
+      "tx_hash": "0x41881b4809f2d58041562e26aad502c0758c395d04d4e37d3b8480018af4389b",
+      "from_address": "0x6B1915E4eA3D2e047351517BBCB19ff56e32fE81",
+      "to_address": "0xC7C94C43E00513edBD446582a64779af884Deb3a",
+      "value": 1000000000000000000,
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "last_leader": "0x90402341F0B0e97b23023c0a87de957FB7148E0F",
+      "value_credited": true,
+      "activator": "0x90402341F0B0e97b23023c0a87de957FB7148E0F"
+    },
+    {
+      "parent_step": "verify_A",
+      "tx_hash": "0x58b516d2650901f54819c190ab99a6807525e451d52d013cf6b91904a1f81dce",
+      "from_address": "0xC7C94C43E00513edBD446582a64779af884Deb3a",
+      "to_address": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+      "value": 1000000000000000000,
+      "status_name": "FINALIZED",
+      "result_name": "NO_MAJORITY",
+      "last_leader": "contract_not_found_handler",
+      "value_credited": false,
+      "activator": ""
+    },
+    {
+      "parent_step": "create_bounty_B",
+      "tx_hash": "0xad2a83d1d066688a1ac9c8ec6090daf9f975065cb96e0078de25087107a4ab0a",
+      "from_address": "0x6B1915E4eA3D2e047351517BBCB19ff56e32fE81",
+      "to_address": "0x6650B7792Da4A0C0D91b763B14C5f44090E047FA",
+      "value": 500000000000000000,
+      "status_name": "FINALIZED",
+      "result_name": "MAJORITY_AGREE",
+      "last_leader": "0x36728d2a123aB444E603EE5b2ad17d18Bb193557",
+      "value_credited": true,
+      "activator": "0x36728d2a123aB444E603EE5b2ad17d18Bb193557"
+    },
+    {
+      "parent_step": "reclaim_after_timeout_B",
+      "tx_hash": "0xb81612f8d8ef5de9e4d416569818703d4fb2819acac1bbbd867b6af8bf8687b0",
+      "from_address": "0x6650B7792Da4A0C0D91b763B14C5f44090E047FA",
+      "to_address": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "value": 500000000000000000,
+      "status_name": "FINALIZED",
+      "result_name": "NO_MAJORITY",
+      "last_leader": "contract_not_found_handler",
+      "value_credited": false,
+      "activator": ""
+    }
+  ],
+  "balances": {
+    "poster": {
+      "address": "0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a",
+      "atto": 55000000000000000000,
+      "gen": 55.0
+    },
+    "reporter": {
+      "address": "0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc",
+      "atto": 1000000000000000000,
+      "gen": 1.0
+    },
+    "child_A": {
+      "address": "0xC7C94C43E00513edBD446582a64779af884Deb3a",
+      "atto": 0,
+      "gen": 0.0
+    },
+    "child_B": {
+      "address": "0x6650B7792Da4A0C0D91b763B14C5f44090E047FA",
+      "atto": 0,
+      "gen": 0.0
+    }
+  },
+  "problems": [
+    "verify_A: emitted transfer of 1000000000000000000 atto to 0xc5ae5Cc2D8198449981e09D1152Da68E0C9dE0Fc settled NO_MAJORITY via 'contract_not_found_handler' and credited nothing",
+    "reclaim_after_timeout_B: emitted transfer of 500000000000000000 atto to 0xE6E7a635EA247D8E8dA6126F7ccbDBb78fB63b4a settled NO_MAJORITY via 'contract_not_found_handler' and credited nothing"
+  ]
+}
